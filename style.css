@@ -398,4 +398,63 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--er
 .pill.cancel { background: #fbeae9; color: var(--error); }
 tr.is-cancelled td { color: var(--grey); }
 tr.is-cancelled .codigo { text-decoration: line-through; }
-.stat-box:nth-child(3) { border-color: var(--error); }
+
+/* ---------- Plazas y lista de espera (web pública) ---------- */
+.seats-line { margin: 6px 0 0; font-size: 0.88rem; font-weight: 600; color: var(--green-dark); }
+.seats-line.low { color: #9a6b00; }
+.seats-line.full { color: var(--error); }
+.btn.waitlist { background: var(--paper); color: var(--ink); border-color: var(--ink); border-style: dashed; }
+.btn.waitlist:hover { background: var(--ink); color: var(--paper); }
+.seats-note { margin: 12px 0 0; padding: 10px 12px; font-size: 0.92rem; background: var(--green-soft); border-left: 5px solid var(--green); }
+.seats-note.full { background: #fff6e0; border-left-color: #d49b00; }
+.ticket-intro.waitlist strong { color: #9a6b00; }
+
+/* ---------- Panel: ocupación de cada función ---------- */
+.section-title { margin: 0 0 6px; font-family: var(--font-title); font-weight: 500; text-transform: uppercase; font-size: 1.2rem; }
+.seat-section { margin: 4px 0 26px; }
+.seat-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.85rem; color: var(--grey); }
+.seat-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 10px; }
+.seat-card {
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+  padding: 12px 14px; background: var(--paper); color: var(--ink);
+  border: 2px solid var(--line); font-family: var(--font-body); cursor: pointer;
+}
+.seat-card:hover { border-color: var(--ink); }
+.seat-card.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--green-soft); }
+.seat-when { font-size: 0.8rem; color: var(--grey); font-weight: 600; }
+.seat-film { font-family: var(--font-title); text-transform: uppercase; font-size: 1.05rem; line-height: 1.15; }
+.seats { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 4px 0; }
+.seat {
+  display: inline-block; width: 100%; aspect-ratio: 1; min-width: 12px;
+  border: 2px solid #b9c7be; background: var(--paper);
+}
+.seat-legend .seat { width: 14px; }
+.seat.taken { background: var(--green); border-color: var(--green); }
+.seat.came { background: var(--ink); border-color: var(--ink); }
+.seat.over { background: var(--error); border-color: var(--error); }
+.seat-count { font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.seat-card.full .seat-count strong { color: var(--error); }
+
+/* ---------- Panel: tabla y acciones ---------- */
+.pill.wait { background: #fff6e0; color: #9a6b00; }
+.pill.came { background: var(--ink); color: var(--paper); }
+.pill.noshow { background: #eee; color: var(--grey); }
+tr.is-noshow td { color: var(--grey); }
+.acts { display: flex; flex-wrap: wrap; gap: 4px; min-width: 150px; }
+.act {
+  font-family: var(--font-body); font-weight: 600; font-size: 0.8rem;
+  padding: 5px 8px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+.act:hover { background: var(--ink); color: var(--paper); }
+.act.ok { background: var(--green); border-color: var(--green); color: var(--paper); }
+.act.ok:hover { background: var(--green-dark); border-color: var(--green-dark); }
+.act.no { border-color: #9a6b00; color: #9a6b00; }
+.act.no:hover { background: #9a6b00; color: var(--paper); }
+.act.danger { border-color: transparent; color: var(--error); text-decoration: underline; padding-inline: 4px; }
+.act.danger:hover { background: transparent; color: #7f1a14; }
+.code-cell { display: flex; gap: 8px; align-items: center; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.stat-box:nth-child(3) { border-color: var(--ink); }
+.stat-box:nth-child(4) { border-color: #d49b00; }
+.stat-box:nth-child(5) { border-color: var(--error); }

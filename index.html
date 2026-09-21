@@ -52,12 +52,24 @@
   </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="i18n.js"></script>
+<script src="plazas.js"></script>
 <script>
 let peliculas = null;
+let ocupadas = {};     // plazas ocupadas por función (en directo desde Firebase)
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function libresDe(p) { return capacidadDe(p) - (ocupadas[p.id] || 0); }
+function lineaPlazas(p) {
+  const n = libresDe(p);
+  return `<p class="seats-line${n <= 0 ? ' full' : n <= 5 ? ' low' : ''}">${textoPlazas(n)}</p>`;
 }
 
 function render() {
@@ -79,10 +91,11 @@ function render() {
             ${p.poster ? `<img class="poster" src="${esc(p.poster)}" alt="">` : ''}
             <h3 class="film-title">${esc(p.titulo)}</h3>
             <p class="film-meta">${esc(p.sinopsis)}</p>
+            ${p.enlaceExterno ? '' : lineaPlazas(p)}
           </div>
           ${p.enlaceExterno
             ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
-            : `<a class="btn" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${t('btn_reserve')}</a>`}
+            : `<a class="btn${libresDe(p) <= 0 ? ' waitlist' : ''}" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${libresDe(p) <= 0 ? t('btn_waitlist') : t('btn_reserve')}</a>`}
         </article>`).join('')}
     </section>`).join('');
 }
@@ -104,6 +117,13 @@ async function cargarPrograma() {
 initLangSwitch();
 document.addEventListener('langchange', render);
 cargarPrograma();
+
+// Plazas ocupadas de todas las funciones, en directo
+db.collection('funciones').onSnapshot(snap => {
+  ocupadas = {};
+  snap.forEach(d => { ocupadas[d.id] = d.data().ocupadas || 0; });
+  render();
+}, () => {});
 </script>
 
 </body>

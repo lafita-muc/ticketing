@@ -123,7 +123,7 @@ const LafitaTicket = (() => {
   }
 
   // Ticket completo (para mostrar y descargar como imagen)
-  function svgTicket({ codigo, nombre, titulo, fecha, fechaTexto, hora, lugar, personas }) {
+  function svgTicket({ codigo, nombre, titulo, fecha, fechaTexto, hora, lugar, personas, estado }) {
     // Textos en el idioma elegido (i18n.js); si no está cargado, en alemán
     const tr = (k, d) => (typeof t === 'function' ? t(k) : d);
     const cuando = fecha && typeof diaCorto === 'function' ? diaCorto(fecha) : (fechaTexto || '');
@@ -144,6 +144,8 @@ const LafitaTicket = (() => {
   <rect x="100" y="176" width="400" height="400" fill="none" stroke="#111" stroke-width="3"/>
   ${arte}
   <rect x="100" y="176" width="400" height="400" fill="none" stroke="#111" stroke-width="3"/>
+  ${estado === 'espera' ? `<rect x="100" y="352" width="400" height="48" fill="#111"/>
+  <text x="${W / 2}" y="385" text-anchor="middle" font-family="${cond}" font-size="28" font-weight="500" letter-spacing="3" fill="#fff">${esc(tr('waitlist_badge', 'WARTELISTE'))}</text>` : ''}
   <text x="${W / 2}" y="622" text-anchor="middle" font-family="${body}" font-size="22" font-weight="600" fill="#4f9670">${esc(nombreArte(codigo))}</text>
   <text x="${W / 2}" y="672" text-anchor="middle" font-family="Courier New, monospace" font-size="46" font-weight="700" letter-spacing="3" fill="#111">${esc(codigo)}</text>
   <rect x="40" y="700" width="520" height="3" fill="#111"/>

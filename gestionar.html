@@ -42,7 +42,7 @@
         <p class="film-meta" id="r-cuando"></p>
       </div>
 
-      <div id="r-cancelada" class="alert error hidden" data-i18n="is_cancelled"></div>
+      <div id="r-estado" class="alert"></div>
 
       <form id="form-editar" novalidate>
         <label for="nombre"><span data-i18n="lbl_name"></span> *</label>
@@ -87,6 +87,7 @@
 <script src="i18n.js"></script>
 <script src="ticket-art.js"></script>
 <script src="validacion.js"></script>
+<script src="plazas.js"></script>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -101,16 +102,46 @@ function mensaje(caja, tipo, texto) {
 
 function ticketDe(r) {
   return { codigo: r.codigo, nombre: r.nombre, personas: r.personas, titulo: r.peliculaTitulo,
-           fecha: r.fecha, hora: r.hora, lugar: r.lugar || '' };
+           fecha: r.fecha, hora: r.hora, lugar: r.lugar || '', estado: r.estado };
+}
+
+function peliculaDe(r) { return peliculas.find(p => p.id === r.peliculaId); }
+
+// Guarda un cambio en la reserva y, si cambian las plazas que ocupa,
+// actualiza el contador de la función en la misma transacción.
+async function guardar(cambios) {
+  const refReserva = db.collection('inscripciones').doc(clave);
+  const refFuncion = db.collection('funciones').doc(reserva.peliculaId);
+  const cap = capacidadDe(peliculaDe(reserva));
+  await db.runTransaction(async tx => {
+    const f = await tx.get(refFuncion);
+    const r = await tx.get(refReserva);
+    const antes = r.data();
+    const despues = Object.assign({}, antes, cambios);
+    const delta = aporta(despues) - aporta(antes);
+    if (delta !== 0) {
+      const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
+      if (ocup + delta > cap) throw new Error('NO_SEATS');
+      tx.set(refFuncion, { ocupadas: ocup + delta, ultima: clave });
+    }
+    tx.update(refReserva, Object.assign({}, cambios, { modificadoEn: firebase.firestore.FieldValue.serverTimestamp() }));
+  });
+  Object.assign(reserva, cambios);
 }
 
 function pintar() {
   if (!reserva) return;
   const cancelada = reserva.estado === 'cancelada';
+  const gestionada = !!reserva.asistencia;     // ya pasó por la taquilla
   $('r-titulo').textContent = reserva.peliculaTitulo;
   $('r-cuando').textContent = `${diaCorto(reserva.fecha)} · ${reserva.hora}${t('time_suffix')} · ${reserva.lugar || ''} · ${reserva.codigo}`;
-  $('r-cancelada').classList.toggle('hidden', !cancelada);
-  $('form-editar').classList.toggle('hidden', cancelada);
+  const [clase, clave_txt] = cancelada ? ['error', 'is_cancelled']
+    : gestionada ? ['info', 'locked_checked']
+    : reserva.estado === 'espera' ? ['info', 'is_waitlist']
+    : ['success', 'is_confirmed'];
+  $('r-estado').className = 'alert ' + clase;
+  $('r-estado').textContent = t(clave_txt);
+  $('form-editar').classList.toggle('hidden', cancelada || gestionada);
   $('reserva').classList.toggle('cancelled', cancelada);
   $('r-ticket').innerHTML = LafitaTicket.svgTicket(ticketDe(reserva));
 }
@@ -162,15 +193,11 @@ $('form-editar').addEventListener('submit', async e => {
   const btn = $('btn-guardar');
   btn.disabled = true; btn.textContent = t('saving');
   try {
-    await db.collection('inscripciones').doc(clave).update({
-      nombre, email, personas,
-      modificadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    Object.assign(reserva, { nombre, email, personas });
+    await guardar({ nombre, email, personas });
     pintar();
     mensaje('editar-msg', 'success', t('saved_ok'));
   } catch (err) {
-    mensaje('editar-msg', 'error', t('err_generic', { msg: err.message }));
+    mensaje('editar-msg', 'error', err.message === 'NO_SEATS' ? t('err_no_seats') : t('err_generic', { msg: err.message }));
   } finally {
     btn.textContent = t('btn_save');
     validacion.refrescar();
@@ -183,11 +210,7 @@ $('btn-cancelar').addEventListener('click', async () => {
   const btn = $('btn-cancelar');
   btn.disabled = true;
   try {
-    await db.collection('inscripciones').doc(clave).update({
-      estado: 'cancelada',
-      modificadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    reserva.estado = 'cancelada';
+    await guardar({ estado: 'cancelada' });
     try { localStorage.removeItem('lafita-ticket-' + reserva.peliculaId); } catch (e) {}
     pintar();
     mensaje('editar-msg', 'success', t('cancelled_ok'));

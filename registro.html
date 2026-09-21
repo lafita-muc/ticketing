@@ -40,6 +40,7 @@
       <div class="form-card">
         <h2 id="titulo-pelicula"></h2>
         <p class="film-meta" id="meta-pelicula"></p>
+        <div id="plazas-note" class="seats-note" hidden></div>
 
         <form id="form-registro" novalidate>
           <label for="nombre"><span data-i18n="lbl_name"></span> *</label>
@@ -67,7 +68,7 @@
   <!-- Paso 2: ticket con código y arte -->
   <div id="paso-ticket" class="hidden">
     <div class="ticket-wrap">
-      <p class="ticket-intro"><strong data-i18n="ticket_title"></strong><span data-i18n="ticket_text"></span></p>
+      <p class="ticket-intro" id="ticket-intro"><strong id="t-title" data-i18n="ticket_title"></strong><span id="t-text" data-i18n="ticket_text"></span></p>
       <div id="ticket-svg" class="ticket-svg"></div>
       <div class="ticket-actions">
         <button class="btn" id="btn-descargar" data-i18n="btn_download"></button>
@@ -103,11 +104,28 @@
 <script src="i18n.js"></script>
 <script src="ticket-art.js"></script>
 <script src="validacion.js"></script>
+<script src="plazas.js"></script>
 
 <script>
 const movieId = new URLSearchParams(location.search).get('pelicula');
 let pelicula = null;
 let ticketActual = null;
+let ocupadas = 0;        // plazas ocupadas en esta función (se actualiza en directo)
+
+function libres() { return pelicula ? capacidadDe(pelicula) - ocupadas : 0; }
+function textoBoton() { return libres() <= 0 ? t('btn_waitlist') : t('btn_send'); }
+
+// Aviso de plazas encima del formulario
+function pintarPlazas() {
+  if (!pelicula) return;
+  const nota = document.getElementById('plazas-note');
+  const n = libres();
+  nota.hidden = false;
+  nota.classList.toggle('full', n <= 0);
+  nota.innerHTML = n <= 0 ? t('form_full_note') : t('form_seats_note', { n });
+  const btn = document.getElementById('btn-enviar');
+  if (btn.textContent !== t('sending')) btn.textContent = textoBoton();
+}
 
 function error(msg) {
   const c = document.getElementById('cargando');
@@ -124,12 +142,20 @@ function pintarPelicula() {
   document.getElementById('info-fecha').textContent = diaCorto(pelicula.fecha);
   document.getElementById('info-hora').textContent = pelicula.hora + t('time_suffix');
   document.getElementById('info-lugar').textContent = pelicula.lugar;
-  if (ticketActual) document.getElementById('ticket-svg').innerHTML = LafitaTicket.svgTicket(ticketActual);
+  if (ticketActual) mostrarTicket(ticketActual, true);
+  pintarPlazas();
 }
 
-function mostrarTicket(tk) {
+function mostrarTicket(tk, soloRepintar) {
   ticketActual = tk;
+  // En lista de espera: otro título y otro texto
+  const espera = tk.estado === 'espera';
+  document.getElementById('ticket-intro').classList.toggle('waitlist', espera);
+  document.getElementById('t-title').dataset.i18n = espera ? 'waitlist_title' : 'ticket_title';
+  document.getElementById('t-text').dataset.i18n = espera ? 'waitlist_text' : 'ticket_text';
+  applyI18n(document.getElementById('ticket-intro'));
   document.getElementById('ticket-svg').innerHTML = LafitaTicket.svgTicket(tk);
+  if (soloRepintar) return;
   const box = document.getElementById('manage-box');
   box.hidden = !tk.clave;
   if (tk.clave) {
@@ -169,6 +195,12 @@ async function init() {
     document.getElementById('cargando').remove();
     pintarPelicula();
 
+    // Plazas ocupadas, en directo (si otra persona reserva, el aviso se actualiza)
+    db.collection('funciones').doc(pelicula.id).onSnapshot(
+      snap => { ocupadas = snap.exists ? (snap.data().ocupadas || 0) : 0; pintarPlazas(); },
+      () => {}
+    );
+
     const previo = leerLocal(movieId);
     if (previo && previo.fecha) {
       mostrarTicket(previo);
@@ -196,23 +228,33 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
   const codigo = LafitaTicket.generarCodigo();      // código de entrada (sale en el ticket)
   const clave = LafitaTicket.generarClave();        // clave secreta para cambiar/cancelar
   const nombreArte = LafitaTicket.nombreArte(codigo);
+  const refReserva = db.collection('inscripciones').doc(clave);   // la clave es el ID del documento
+  const refFuncion = db.collection('funciones').doc(pelicula.id);
 
   try {
-    // La clave secreta es el ID del documento: solo quien la tiene puede abrir su reserva
-    await db.collection('inscripciones').doc(clave).set({
-      codigo,
-      nombreArte,
-      peliculaId: pelicula.id,
-      peliculaTitulo: pelicula.titulo,
-      fecha: pelicula.fecha,
-      hora: pelicula.hora,
-      lugar: pelicula.lugar,
-      nombre,
-      email,
-      personas,
-      estado: 'activa',
-      idioma: LANG,
-      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    // Transacción: se leen las plazas ocupadas y se guarda la reserva a la vez,
+    // así dos personas no pueden quedarse con la última plaza al mismo tiempo.
+    const estado = await db.runTransaction(async tx => {
+      const f = await tx.get(refFuncion);
+      const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
+      const estado = ocup + personas <= capacidadDe(pelicula) ? 'activa' : 'espera';
+      tx.set(refReserva, {
+        codigo,
+        nombreArte,
+        peliculaId: pelicula.id,
+        peliculaTitulo: pelicula.titulo,
+        fecha: pelicula.fecha,
+        hora: pelicula.hora,
+        lugar: pelicula.lugar,
+        nombre,
+        email,
+        personas,
+        estado,
+        idioma: LANG,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (estado === 'activa') tx.set(refFuncion, { ocupadas: ocup + personas, ultima: clave });
+      return estado;
     });
 
     const tk = {
@@ -221,7 +263,8 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
       titulo: pelicula.titulo,
       fecha: pelicula.fecha,
       hora: pelicula.hora,
-      lugar: pelicula.lugar
+      lugar: pelicula.lugar,
+      estado
     };
     guardarLocal(tk);
     mostrarTicket(tk);
@@ -229,7 +272,7 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
     errorBox.innerHTML = `<div class="alert error"></div>`;
     errorBox.firstChild.textContent = t('err_send', { msg: err.message });
   } finally {
-    btn.textContent = t('btn_send');
+    btn.textContent = textoBoton();
     validacion.refrescar();
   }
 });

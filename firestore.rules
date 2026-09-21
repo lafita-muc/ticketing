@@ -1,0 +1,99 @@
+// Reglas de seguridad de Firestore para LAFITA Tickets.
+// Se pegan en Firebase: Firestore Database → Rules → Publish.
+//
+// - El público puede reservar mientras queden plazas (si no, queda en lista de espera).
+// - Cada persona puede cambiar o cancelar SU reserva con su clave de gestión.
+// - El equipo (con login) puede verlo todo y marcar asistencia, cancelar,
+//   confirmar desde la lista de espera y borrar.
+// - "funciones" guarda cuántas plazas ocupadas tiene cada función, para que la
+//   web pública sepa cuántas quedan sin ver los datos de nadie.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Plazas por sala. Si cambias "capacidad" en movies.json, cambia también este número.
+    function CAP() { return 30; }
+
+    function ins(c) { return /databases/$(database)/documents/inscripciones/$(c); }
+    function fun(p) { return /databases/$(database)/documents/funciones/$(p); }
+
+    // Plazas que ocupa una reserva: solo las activas que no se marcaron "no vino"
+    function aporta(d) {
+      return (d.estado == 'activa' && d.get('asistencia', '') != 'no_vino') ? d.personas : 0;
+    }
+
+    function esEquipo() { return request.auth != null; }
+
+    match /inscripciones/{clave} {
+
+      // Datos obligatorios y con formato correcto
+      function valida(d) {
+        return d.nombre is string && d.nombre.size() >= 2 && d.nombre.size() <= 120
+          && d.email is string && d.email.size() <= 160 && d.email.matches('.+@.+[.].+')
+          && d.personas is int && d.personas >= 1 && d.personas <= 10
+          && d.estado in ['activa', 'espera', 'cancelada']
+          && d.codigo is string && d.codigo.size() == 9
+          && d.peliculaId is string;
+      }
+
+      // El contador de la función se actualiza en la misma operación
+      function contadorOk(antes, despues) {
+        return aporta(despues) == aporta(antes)
+          || getAfter(fun(despues.peliculaId)).data.ocupadas ==
+               (exists(fun(despues.peliculaId)) ? get(fun(despues.peliculaId)).data.ocupadas : 0)
+               + aporta(despues) - aporta(antes);
+      }
+
+      // Reservar (público): "activa" si hay plazas (sube el contador), o "espera"
+      allow create: if clave.size() == 12
+        && valida(request.resource.data)
+        && !('asistencia' in request.resource.data)
+        && request.resource.data.estado in ['activa', 'espera']
+        && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data);
+
+      // Ver UNA reserva: quien conoce su clave de gestión (el ID)
+      allow get: if true;
+
+      // Ver la lista completa: solo el equipo
+      allow list: if esEquipo();
+
+      // Cambiar o cancelar (público, con la clave): solo nombre, email, personas
+      // y estado; no si ya pasó por la taquilla; no se puede "reactivar"
+      allow update: if esEquipo()
+        || (resource.data.estado in ['activa', 'espera']
+            && resource.data.get('asistencia', '') == ''
+            && valida(request.resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['nombre', 'email', 'personas', 'estado', 'modificadoEn'])
+            && (request.resource.data.estado == resource.data.estado
+                || request.resource.data.estado == 'cancelada')
+            && contadorOk(resource.data, request.resource.data));
+
+      // Borrar: solo el equipo
+      allow delete: if esEquipo();
+    }
+
+    match /funciones/{pid} {
+      // Cualquiera puede ver cuántas plazas quedan (no contiene datos personales)
+      allow read: if true;
+
+      // El equipo lo puede corregir siempre
+      allow write: if esEquipo();
+
+      // El público solo lo cambia junto con SU reserva ("ultima"), y la cuenta
+      // tiene que cuadrar con lo que esa reserva ocupa antes y después
+      allow create, update: if request.resource.data.keys().hasOnly(['ocupadas', 'ultima'])
+        && request.resource.data.ocupadas is int
+        && request.resource.data.ocupadas >= 0
+        && request.resource.data.ocupadas <= CAP()
+        && request.resource.data.ultima is string
+        && existsAfter(ins(request.resource.data.ultima))
+        && getAfter(ins(request.resource.data.ultima)).data.peliculaId == pid
+        && request.resource.data.ocupadas ==
+             (resource == null ? 0 : resource.data.ocupadas)
+             + aporta(getAfter(ins(request.resource.data.ultima)).data)
+             - (exists(ins(request.resource.data.ultima)) ? aporta(get(ins(request.resource.data.ultima)).data) : 0);
+    }
+  }
+}

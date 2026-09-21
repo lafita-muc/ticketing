@@ -7,7 +7,7 @@
     "fecha": "2026-11-25",
     "hora": "18:30",
     "lugar": "Kulturzentrum Luise",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -18,7 +18,7 @@
     "fecha": "2026-11-26",
     "hora": "18:00",
     "lugar": "Werkstattkino",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -29,7 +29,7 @@
     "fecha": "2026-11-26",
     "hora": "20:00",
     "lugar": "Werkstattkino",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -40,7 +40,7 @@
     "fecha": "2026-11-27",
     "hora": "18:00",
     "lugar": "Werkstattkino",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -51,7 +51,7 @@
     "fecha": "2026-11-27",
     "hora": "20:00",
     "lugar": "Werkstattkino",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -62,7 +62,7 @@
     "fecha": "2026-11-27",
     "hora": "22:00",
     "lugar": "Werkstattkino",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4
   },
   {
@@ -73,7 +73,7 @@
     "fecha": "2026-11-28",
     "hora": "15:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   },
@@ -85,7 +85,7 @@
     "fecha": "2026-11-28",
     "hora": "18:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   },
@@ -97,7 +97,7 @@
     "fecha": "2026-11-28",
     "hora": "20:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   },
@@ -109,7 +109,7 @@
     "fecha": "2026-11-29",
     "hora": "15:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   },
@@ -121,7 +121,7 @@
     "fecha": "2026-11-29",
     "hora": "18:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   },
@@ -133,7 +133,7 @@
     "fecha": "2026-11-29",
     "hora": "20:00",
     "lugar": "Gasteig HP8",
-    "capacidad": 100,
+    "capacidad": 30,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://lafita.de"
   }
