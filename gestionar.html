@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAFITA Tickets 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Oswald:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="wordmark">LAFITA</span><span class="tag">Tickets</span></a>
+    <div class="header-right">
+      <div class="lang-switch"></div>
+      <div class="header-dates">25.–29.11.2026<small data-i18n="header_sub"></small></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <a class="back-link" href="index.html" data-i18n="back_program"></a>
+
+  <div class="manage-page">
+    <h1 data-i18n="manage_title"></h1>
+    <p data-i18n="manage_intro"></p>
+
+    <!-- Paso 1: buscar con la clave de gestión -->
+    <form id="form-buscar" class="lookup" novalidate>
+      <input type="text" id="clave-input" aria-label="Key" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20">
+      <button type="submit" class="btn" id="btn-buscar" data-i18n="btn_find"></button>
+    </form>
+    <div id="buscar-msg"></div>
+
+    <!-- Paso 2: la reserva encontrada -->
+    <section id="reserva" class="hidden">
+      <div class="manage-film">
+        <h2 id="r-titulo"></h2>
+        <p class="film-meta" id="r-cuando"></p>
+      </div>
+
+      <div id="r-cancelada" class="alert error hidden" data-i18n="is_cancelled"></div>
+
+      <form id="form-editar" novalidate>
+        <label for="nombre"><span data-i18n="lbl_name"></span> *</label>
+        <input type="text" id="nombre" required minlength="2" maxlength="120" autocomplete="name" aria-describedby="nombre-err">
+        <p class="field-error" id="nombre-err" aria-live="polite"></p>
+
+        <label for="email"><span data-i18n="lbl_email"></span> *</label>
+        <input type="email" id="email" required maxlength="160" autocomplete="email" aria-describedby="email-err">
+        <p class="field-error" id="email-err" aria-live="polite"></p>
+
+        <label for="personas"><span data-i18n="lbl_people"></span> *</label>
+        <select id="personas" required aria-describedby="personas-err"></select>
+        <p class="field-error" id="personas-err" aria-live="polite"></p>
+
+        <p class="form-hint" data-i18n="edit_note"></p>
+
+        <div class="manage-actions">
+          <button type="submit" class="btn" id="btn-guardar" data-i18n="btn_save"></button>
+          <button type="button" class="btn danger" id="btn-cancelar" data-i18n="btn_cancel_res"></button>
+        </div>
+        <p class="form-hint" id="form-hint" data-i18n="all_required"></p>
+      </form>
+
+      <div id="editar-msg"></div>
+      <div class="manage-ticket" id="r-ticket"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="inner">
+    <span>LAFITA · Lateinamerikanische Filmtage München</span>
+    <span><a href="https://lafita.de">lafita.de</a></span>
+  </div>
+</footer>
+
+<!-- Firebase SDK (versión "compat", sin necesidad de build tools) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="i18n.js"></script>
+<script src="ticket-art.js"></script>
+<script src="validacion.js"></script>
+
+<script>
+const $ = id => document.getElementById(id);
+let clave = null;        // clave de gestión (ID del documento)
+let reserva = null;      // datos de la reserva encontrada
+let peliculas = [];
+
+function mensaje(caja, tipo, texto) {
+  $(caja).innerHTML = texto ? `<div class="alert ${tipo}"></div>` : '';
+  if (texto) $(caja).firstChild.textContent = texto;
+}
+
+function ticketDe(r) {
+  return { codigo: r.codigo, nombre: r.nombre, personas: r.personas, titulo: r.peliculaTitulo,
+           fecha: r.fecha, hora: r.hora, lugar: r.lugar || '' };
+}
+
+function pintar() {
+  if (!reserva) return;
+  const cancelada = reserva.estado === 'cancelada';
+  $('r-titulo').textContent = reserva.peliculaTitulo;
+  $('r-cuando').textContent = `${diaCorto(reserva.fecha)} · ${reserva.hora}${t('time_suffix')} · ${reserva.lugar || ''} · ${reserva.codigo}`;
+  $('r-cancelada').classList.toggle('hidden', !cancelada);
+  $('form-editar').classList.toggle('hidden', cancelada);
+  $('reserva').classList.toggle('cancelled', cancelada);
+  $('r-ticket').innerHTML = LafitaTicket.svgTicket(ticketDe(reserva));
+}
+
+async function buscar(c) {
+  clave = LafitaTicket.normalizarClave(c);
+  mensaje('buscar-msg', '', '');
+  mensaje('editar-msg', '', '');
+  $('reserva').classList.add('hidden');
+  if (clave.length !== 12) { mensaje('buscar-msg', 'error', t('not_found_key')); return; }
+
+  $('btn-buscar').disabled = true;
+  $('btn-buscar').textContent = t('searching');
+  try {
+    const doc = await db.collection('inscripciones').doc(clave).get();
+    if (!doc.exists) { mensaje('buscar-msg', 'error', t('not_found_key')); return; }
+    reserva = doc.data();
+    $('clave-input').value = LafitaTicket.formatearClave(clave);
+    history.replaceState(null, '', '?clave=' + clave);
+
+    // Rellenar el formulario con los datos actuales
+    const peli = peliculas.find(p => p.id === reserva.peliculaId);
+    if (peli && !reserva.lugar) reserva.lugar = peli.lugar;
+    const max = Math.max((peli && peli.maxEntradasPorPersona) || 4, reserva.personas || 1);
+    $('personas').innerHTML = `<option value="">${t('opt_choose')}</option>` +
+      Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+    $('nombre').value = reserva.nombre || '';
+    $('email').value = reserva.email || '';
+    $('personas').value = String(reserva.personas || '');
+    validacion.reiniciar();
+
+    pintar();
+    $('reserva').classList.remove('hidden');
+  } catch (e) {
+    mensaje('buscar-msg', 'error', t('err_generic', { msg: e.message }));
+  } finally {
+    $('btn-buscar').disabled = false;
+    $('btn-buscar').textContent = t('btn_find');
+  }
+}
+
+$('form-buscar').addEventListener('submit', e => { e.preventDefault(); buscar($('clave-input').value); });
+
+// Guardar cambios (nombre, email, personas)
+$('form-editar').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!reserva || !validacion.comprobar()) return;
+  const { nombre, email, personas } = validacion.leer();
+  const btn = $('btn-guardar');
+  btn.disabled = true; btn.textContent = t('saving');
+  try {
+    await db.collection('inscripciones').doc(clave).update({
+      nombre, email, personas,
+      modificadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    Object.assign(reserva, { nombre, email, personas });
+    pintar();
+    mensaje('editar-msg', 'success', t('saved_ok'));
+  } catch (err) {
+    mensaje('editar-msg', 'error', t('err_generic', { msg: err.message }));
+  } finally {
+    btn.textContent = t('btn_save');
+    validacion.refrescar();
+  }
+});
+
+// Cancelar la reserva (queda marcada como "cancelada" para el equipo)
+$('btn-cancelar').addEventListener('click', async () => {
+  if (!reserva || !confirm(t('confirm_cancel'))) return;
+  const btn = $('btn-cancelar');
+  btn.disabled = true;
+  try {
+    await db.collection('inscripciones').doc(clave).update({
+      estado: 'cancelada',
+      modificadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    reserva.estado = 'cancelada';
+    try { localStorage.removeItem('lafita-ticket-' + reserva.peliculaId); } catch (e) {}
+    pintar();
+    mensaje('editar-msg', 'success', t('cancelled_ok'));
+  } catch (err) {
+    mensaje('editar-msg', 'error', t('err_generic', { msg: err.message }));
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+initLangSwitch();
+const validacion = conectarValidacion(
+  { nombre: 'nombre', email: 'email', personas: 'personas' },
+  $('btn-guardar'),
+  $('form-hint')
+);
+document.addEventListener('langchange', () => {
+  pintar();
+  const opt = $('personas').querySelector('option[value=""]');
+  if (opt) opt.textContent = t('opt_choose');
+});
+
+(async () => {
+  try { peliculas = await (await fetch('movies.json', { cache: 'no-store' })).json(); } catch (e) {}
+  const desdeLink = new URLSearchParams(location.search).get('clave');
+  if (desdeLink) { $('clave-input').value = LafitaTicket.formatearClave(LafitaTicket.normalizarClave(desdeLink)); buscar(desdeLink); }
+})();
+</script>
+
+</body>
+</html>

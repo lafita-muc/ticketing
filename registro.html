@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAFITA Tickets 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Oswald:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="wordmark">LAFITA</span><span class="tag">Tickets</span></a>
+    <div class="header-right">
+      <div class="lang-switch"></div>
+      <div class="header-dates">25.–29.11.2026<small data-i18n="header_sub"></small></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <a class="back-link" href="index.html" data-i18n="back_program"></a>
+
+  <div id="cargando" class="alert info" data-i18n="loading"></div>
+
+  <!-- Paso 1: formulario -->
+  <div id="paso-form" class="hidden">
+    <div class="film-page">
+      <aside class="film-info">
+        <strong id="info-fecha"></strong>
+        <span id="info-hora"></span><br>
+        <strong id="info-lugar"></strong>
+        <div class="green-bar"></div>
+        <span class="small" data-i18n="form_note"></span>
+      </aside>
+
+      <div class="form-card">
+        <h2 id="titulo-pelicula"></h2>
+        <p class="film-meta" id="meta-pelicula"></p>
+
+        <form id="form-registro" novalidate>
+          <label for="nombre"><span data-i18n="lbl_name"></span> *</label>
+          <input type="text" id="nombre" required minlength="2" maxlength="120" autocomplete="name" aria-describedby="nombre-err">
+          <p class="field-error" id="nombre-err" aria-live="polite"></p>
+
+          <label for="email"><span data-i18n="lbl_email"></span> *</label>
+          <input type="email" id="email" required maxlength="160" autocomplete="email" aria-describedby="email-err">
+          <p class="field-error" id="email-err" aria-live="polite"></p>
+
+          <label for="personas"><span data-i18n="lbl_people"></span> *</label>
+          <select id="personas" required aria-describedby="personas-err"></select>
+          <p class="field-error" id="personas-err" aria-live="polite"></p>
+
+          <div class="form-actions">
+            <button type="submit" class="btn" id="btn-enviar" data-i18n="btn_send" disabled></button>
+            <p class="form-hint" id="form-hint" data-i18n="all_required"></p>
+          </div>
+        </form>
+        <div id="error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paso 2: ticket con código y arte -->
+  <div id="paso-ticket" class="hidden">
+    <div class="ticket-wrap">
+      <p class="ticket-intro"><strong data-i18n="ticket_title"></strong><span data-i18n="ticket_text"></span></p>
+      <div id="ticket-svg" class="ticket-svg"></div>
+      <div class="ticket-actions">
+        <button class="btn" id="btn-descargar" data-i18n="btn_download"></button>
+        <a class="btn secondary" href="index.html" data-i18n="btn_other"></a>
+      </div>
+      <button class="link-btn" id="btn-nueva" data-i18n="btn_again"></button>
+
+      <div class="manage-box" id="manage-box">
+        <h3 data-i18n="manage_key_label"></h3>
+        <div class="key-row">
+          <span class="key" id="clave"></span>
+          <button type="button" class="btn secondary small" id="btn-copiar" data-i18n="btn_copy"></button>
+        </div>
+        <p data-i18n="manage_key_hint"></p>
+        <a class="manage-link" id="link-gestion" href="gestionar.html" data-i18n="btn_manage"></a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="inner">
+    <span>LAFITA · Lateinamerikanische Filmtage München</span>
+    <span><a href="https://lafita.de">lafita.de</a></span>
+  </div>
+</footer>
+
+<!-- Firebase SDK (versión "compat", sin necesidad de build tools) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="i18n.js"></script>
+<script src="ticket-art.js"></script>
+<script src="validacion.js"></script>
+
+<script>
+const movieId = new URLSearchParams(location.search).get('pelicula');
+let pelicula = null;
+let ticketActual = null;
+
+function error(msg) {
+  const c = document.getElementById('cargando');
+  c.className = 'alert error';
+  c.removeAttribute('data-i18n');
+  c.textContent = msg;
+}
+
+function pintarPelicula() {
+  if (!pelicula) return;
+  document.title = `${pelicula.titulo} — LAFITA Tickets`;
+  document.getElementById('titulo-pelicula').textContent = pelicula.titulo;
+  document.getElementById('meta-pelicula').textContent = pelicula.sinopsis || '';
+  document.getElementById('info-fecha').textContent = diaCorto(pelicula.fecha);
+  document.getElementById('info-hora').textContent = pelicula.hora + t('time_suffix');
+  document.getElementById('info-lugar').textContent = pelicula.lugar;
+  if (ticketActual) document.getElementById('ticket-svg').innerHTML = LafitaTicket.svgTicket(ticketActual);
+}
+
+function mostrarTicket(tk) {
+  ticketActual = tk;
+  document.getElementById('ticket-svg').innerHTML = LafitaTicket.svgTicket(tk);
+  const box = document.getElementById('manage-box');
+  box.hidden = !tk.clave;
+  if (tk.clave) {
+    document.getElementById('clave').textContent = LafitaTicket.formatearClave(tk.clave);
+    document.getElementById('link-gestion').href = 'gestionar.html?clave=' + tk.clave;
+  }
+  document.getElementById('paso-form').classList.add('hidden');
+  document.getElementById('paso-ticket').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Recordar el último ticket de esta película en este navegador (por si recargan la página)
+function guardarLocal(tk) {
+  try { localStorage.setItem('lafita-ticket-' + tk.peliculaId, JSON.stringify(tk)); } catch (e) {}
+}
+function leerLocal(id) {
+  try { return JSON.parse(localStorage.getItem('lafita-ticket-' + id)); } catch (e) { return null; }
+}
+
+async function init() {
+  if (!movieId) { error(t('err_nofilm')); return; }
+  try {
+    const peliculas = await (await fetch('movies.json', { cache: 'no-store' })).json();
+    pelicula = peliculas.find(p => p.id === movieId);
+    if (!pelicula) { error(t('err_notfound')); return; }
+    if (pelicula.enlaceExterno) {
+      // Esta función no usa el formulario: las entradas se venden en otra web
+      location.replace(pelicula.enlaceExterno);
+      return;
+    }
+    const select = document.getElementById('personas');
+    select.innerHTML = `<option value="" data-i18n="opt_choose">${t('opt_choose')}</option>`;
+    for (let i = 1; i <= (pelicula.maxEntradasPorPersona || 4); i++) {
+      select.insertAdjacentHTML('beforeend', `<option value="${i}">${i}</option>`);
+    }
+    validacion.refrescar();
+    document.getElementById('cargando').remove();
+    pintarPelicula();
+
+    const previo = leerLocal(movieId);
+    if (previo && previo.fecha) {
+      mostrarTicket(previo);
+    } else {
+      document.getElementById('paso-form').classList.remove('hidden');
+    }
+  } catch (e) {
+    error(t('err_loadfilm', { msg: e.message }));
+  }
+}
+
+document.getElementById('form-registro').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btn-enviar');
+  const errorBox = document.getElementById('error');
+  errorBox.innerHTML = '';
+
+  // Todos los campos son obligatorios: si falta algo, no se envía
+  if (!validacion.comprobar()) return;
+  const { nombre, email, personas } = validacion.leer();
+
+  btn.disabled = true;
+  btn.textContent = t('sending');
+
+  const codigo = LafitaTicket.generarCodigo();      // código de entrada (sale en el ticket)
+  const clave = LafitaTicket.generarClave();        // clave secreta para cambiar/cancelar
+  const nombreArte = LafitaTicket.nombreArte(codigo);
+
+  try {
+    // La clave secreta es el ID del documento: solo quien la tiene puede abrir su reserva
+    await db.collection('inscripciones').doc(clave).set({
+      codigo,
+      nombreArte,
+      peliculaId: pelicula.id,
+      peliculaTitulo: pelicula.titulo,
+      fecha: pelicula.fecha,
+      hora: pelicula.hora,
+      lugar: pelicula.lugar,
+      nombre,
+      email,
+      personas,
+      estado: 'activa',
+      idioma: LANG,
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const tk = {
+      codigo, clave, nombre, personas,
+      peliculaId: pelicula.id,
+      titulo: pelicula.titulo,
+      fecha: pelicula.fecha,
+      hora: pelicula.hora,
+      lugar: pelicula.lugar
+    };
+    guardarLocal(tk);
+    mostrarTicket(tk);
+  } catch (err) {
+    errorBox.innerHTML = `<div class="alert error"></div>`;
+    errorBox.firstChild.textContent = t('err_send', { msg: err.message });
+  } finally {
+    btn.textContent = t('btn_send');
+    validacion.refrescar();
+  }
+});
+
+document.getElementById('btn-descargar').addEventListener('click', () => {
+  if (!ticketActual) return;
+  LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), `LAFITA-${ticketActual.codigo}.png`);
+});
+
+document.getElementById('btn-copiar').addEventListener('click', async (e) => {
+  const texto = LafitaTicket.formatearClave(ticketActual && ticketActual.clave);
+  try { await navigator.clipboard.writeText(texto); e.target.textContent = t('copied'); }
+  catch (err) { window.prompt('', texto); }
+  setTimeout(() => { e.target.textContent = t('btn_copy'); }, 2000);
+});
+
+document.getElementById('btn-nueva').addEventListener('click', () => {
+  document.getElementById('form-registro').reset();
+  validacion.reiniciar();
+  ticketActual = null;
+  document.getElementById('paso-ticket').classList.add('hidden');
+  document.getElementById('paso-form').classList.remove('hidden');
+});
+
+initLangSwitch();
+const validacion = conectarValidacion(
+  { nombre: 'nombre', email: 'email', personas: 'personas' },
+  document.getElementById('btn-enviar'),
+  document.getElementById('form-hint')
+);
+document.addEventListener('langchange', pintarPelicula);
+init();
+</script>
+
+</body>
+</html>

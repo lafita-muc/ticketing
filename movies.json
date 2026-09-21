@@ -1,0 +1,140 @@
+[
+  {
+    "id": "el-deshielo-1125",
+    "titulo": "EL DESHIELO",
+    "sinopsis": "Spielfilm · Chile, USA, Spanien, Mexiko 2026 · 108 min · Regie: Manuela Martelli",
+    "poster": "",
+    "fecha": "2026-11-25",
+    "hora": "18:30",
+    "lugar": "Kulturzentrum Luise",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "kurzfilmprogramm-el-sonido-de-antes-1126",
+    "titulo": "KURZFILMPROGRAMM / EL SONIDO DE ANTES",
+    "sinopsis": "Kurzfilme",
+    "poster": "",
+    "fecha": "2026-11-26",
+    "hora": "18:00",
+    "lugar": "Werkstattkino",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "siempre-soy-tu-animal-materno-1126",
+    "titulo": "SIEMPRE SOY TU ANIMAL MATERNO",
+    "sinopsis": "Spielfilm · Belgien, Frankreich, Mexiko 2025 · 108 min · Regie: Valentina Maurel",
+    "poster": "",
+    "fecha": "2026-11-26",
+    "hora": "20:00",
+    "lugar": "Werkstattkino",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "el-brujo-1127",
+    "titulo": "EL BRUJO",
+    "sinopsis": "Panama",
+    "poster": "",
+    "fecha": "2026-11-27",
+    "hora": "18:00",
+    "lugar": "Werkstattkino",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "harakiri-me-haces-falta-1127",
+    "titulo": "HARAKIRI, ME HACES FALTA",
+    "sinopsis": "Spielfilm · Spanien 2025 · 100 min · Regie: Alejandro Castro Arias",
+    "poster": "",
+    "fecha": "2026-11-27",
+    "hora": "20:00",
+    "lugar": "Werkstattkino",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "la-muerte-no-tiene-dueno-1127",
+    "titulo": "LA MUERTE NO TIENE DUEÑO",
+    "sinopsis": "Spielfilm · Italien, Kanada, Luxemburg, Venezuela 2026 · 105 min · Regie: Jorge Thielen Armand",
+    "poster": "",
+    "fecha": "2026-11-27",
+    "hora": "22:00",
+    "lugar": "Werkstattkino",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4
+  },
+  {
+    "id": "cuerpo-celeste-1128",
+    "titulo": "CUERPO CELESTE",
+    "sinopsis": "Spielfilm · Italien, Chile 2025 · 97 min · Regie: Nayra Ilic García",
+    "poster": "",
+    "fecha": "2026-11-28",
+    "hora": "15:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  },
+  {
+    "id": "moscas-1128",
+    "titulo": "MOSCAS",
+    "sinopsis": "Spielfilm · Mexiko 2026 · 99 min · Regie: Fernando Eimbcke",
+    "poster": "",
+    "fecha": "2026-11-28",
+    "hora": "18:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  },
+  {
+    "id": "narciso-1128",
+    "titulo": "NARCISO",
+    "sinopsis": "Spielfilm · Paraguay, Deutschland, Uruguay, Brasilien, Portugal, Spanien, Frankreich 2026 · 101 min · Regie: Marcelo Martinessi",
+    "poster": "",
+    "fecha": "2026-11-28",
+    "hora": "20:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  },
+  {
+    "id": "si-vas-para-chile-1129",
+    "titulo": "SI VAS PARA CHILE",
+    "sinopsis": "Dokumentarfilm · Chile 2025 · 70 min · Regie: Sebastián González, Amílcar Infante",
+    "poster": "",
+    "fecha": "2026-11-29",
+    "hora": "15:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  },
+  {
+    "id": "was-an-empfindsamkeit-bleibt-1129",
+    "titulo": "WAS AN EMPFINDSAMKEIT BLEIBT",
+    "sinopsis": "Dokumentarfilm · Deutschland 2026 · 91 min · Regie: Daniela Magnani Hüller",
+    "poster": "",
+    "fecha": "2026-11-29",
+    "hora": "18:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  },
+  {
+    "id": "un-cabo-suelto-1129",
+    "titulo": "UN CABO SUELTO",
+    "sinopsis": "Spielfilm · Uruguay, Argentinien, Spanien 2025 · 95 min · Regie: Daniel Hendler",
+    "poster": "",
+    "fecha": "2026-11-29",
+    "hora": "20:00",
+    "lugar": "Gasteig HP8",
+    "capacidad": 100,
+    "maxEntradasPorPersona": 4,
+    "enlaceExterno": "https://lafita.de"
+  }
+]

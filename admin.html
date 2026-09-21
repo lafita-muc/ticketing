@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAFITA Tickets — Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Oswald:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="wordmark">LAFITA</span><span class="tag">Tickets</span></a>
+    <div class="header-right">
+      <div class="lang-switch"></div>
+      <div class="header-dates"><span data-i18n="admin_title_right"></span><small data-i18n="admin_sub"></small></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <a class="back-link" href="index.html" data-i18n="back_public"></a>
+
+  <div id="login-box" class="admin-login">
+    <h2 data-i18n="login_title"></h2>
+    <label for="login-email" data-i18n="lbl_login_email"></label>
+    <input type="email" id="login-email" autocomplete="username">
+    <label for="login-pass" data-i18n="lbl_pass"></label>
+    <input type="password" id="login-pass" autocomplete="current-password">
+    <div class="form-actions">
+      <button class="btn" id="btn-login" data-i18n="btn_login"></button>
+    </div>
+    <div id="login-error"></div>
+  </div>
+
+  <div id="panel" class="hidden">
+    <div class="admin-toolbar" style="justify-content:space-between">
+      <h2 class="panel-title" data-i18n="panel_title"></h2>
+      <span><span id="usuario-actual" class="user-line"></span> <button class="btn secondary" id="btn-logout" data-i18n="btn_logout"></button></span>
+    </div>
+
+    <div class="admin-toolbar">
+      <input type="search" id="buscar" data-i18n-ph="search_ph" aria-label="Buscar">
+      <select id="filtro-pelicula" aria-label="Filtrar por película"></select>
+      <button class="btn secondary" id="btn-csv" data-i18n="btn_csv"></button>
+    </div>
+
+    <div class="stat-row" id="stats"></div>
+
+    <div class="table-scroll">
+      <table class="reservas">
+        <thead>
+          <tr>
+            <th data-i18n="th_status"></th>
+            <th data-i18n="th_art"></th>
+            <th data-i18n="th_code"></th>
+            <th data-i18n="th_name"></th>
+            <th data-i18n="th_email"></th>
+            <th data-i18n="th_people"></th>
+            <th data-i18n="th_film"></th>
+            <th data-i18n="th_sent"></th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="inner"><span>LAFITA · Team</span><span><a href="https://lafita.de">lafita.de</a></span></div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="i18n.js"></script>
+<script src="ticket-art.js"></script>
+
+<script>
+let todas = [];
+let usuarioActual = null;
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errorBox = document.getElementById('login-error');
+  errorBox.innerHTML = '';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (e) {
+    errorBox.innerHTML = `<div class="alert error">${traducirError(e.code)}</div>`;
+  }
+});
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
+});
+document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
+
+let desuscribir = null;
+auth.onAuthStateChanged(user => {
+  document.getElementById('login-box').classList.toggle('hidden', !!user);
+  document.getElementById('panel').classList.toggle('hidden', !user);
+  if (desuscribir) { desuscribir(); desuscribir = null; }
+  if (user) {
+    usuarioActual = user.email;
+    document.getElementById('usuario-actual').textContent = t('connected_as', { email: user.email });
+    desuscribir = db.collection('inscripciones').orderBy('creadoEn', 'desc').onSnapshot(snap => {
+      todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      actualizarFiltro();
+      render();
+    }, err => {
+      document.getElementById('tabla-body').innerHTML =
+        `<tr><td colspan="8">${escapeHtml(t('err_read', { msg: err.message }))}</td></tr>`;
+    });
+  }
+});
+
+function actualizarFiltro() {
+  const select = document.getElementById('filtro-pelicula');
+  const previo = select.value;
+  const titulos = [...new Set(todas.map(r => r.peliculaTitulo).filter(Boolean))];
+  select.innerHTML = `<option value="">${t('all_films')}</option>` +
+    titulos.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  select.value = titulos.includes(previo) ? previo : '';
+}
+
+function filtradas() {
+  const peli = document.getElementById('filtro-pelicula').value;
+  const q = normalizar(document.getElementById('buscar').value);
+  return todas.filter(r => {
+    if (peli && r.peliculaTitulo !== peli) return false;
+    if (!q) return true;
+    return normalizar([r.codigo, r.nombre, r.email, r.nombreArte].join(' ')).includes(q);
+  });
+}
+
+function render() {
+  const datos = filtradas();
+  document.getElementById('tabla-body').innerHTML = datos.map(r => `
+    <tr class="${r.estado === 'cancelada' ? 'is-cancelled' : ''}">
+      <td>${r.estado === 'cancelada'
+        ? `<span class="pill cancel">${t('status_cancelled')}</span>`
+        : `<span class="pill ok">${t('status_active')}</span>`}</td>
+      <td class="mini-arte">${LafitaTicket.svgArte(r.codigo || r.id, 60)}</td>
+      <td><div class="codigo">${escapeHtml(r.codigo || r.id)}</div><div class="nombre-arte">${escapeHtml(r.nombreArte || LafitaTicket.nombreArte(r.codigo || r.id))}</div></td>
+      <td>${escapeHtml(r.nombre)}</td>
+      <td>${escapeHtml(r.email)}</td>
+      <td>${r.personas || 0}</td>
+      <td>${escapeHtml(r.peliculaTitulo)}<div class="sub">${r.fecha ? diaCorto(r.fecha) : ''} ${escapeHtml(r.hora)}</div></td>
+      <td>${formatearTimestamp(r.creadoEn)}</td>
+    </tr>`).join('') || `<tr><td colspan="8">${t('none_match')}</td></tr>`;
+
+  // Los totales solo cuentan reservas activas
+  const activas = datos.filter(r => r.estado !== 'cancelada');
+  const personas = activas.reduce((s, r) => s + (r.personas || 0), 0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-box"><div class="num">${activas.length}</div><div class="label">${t('stat_res')}</div></div>
+    <div class="stat-box"><div class="num">${personas}</div><div class="label">${t('stat_people')}</div></div>
+    <div class="stat-box"><div class="num">${datos.length - activas.length}</div><div class="label">${t('stat_cancelled')}</div></div>`;
+}
+
+document.getElementById('filtro-pelicula').addEventListener('change', render);
+document.getElementById('buscar').addEventListener('input', render);
+
+document.getElementById('btn-csv').addEventListener('click', () => {
+  const filas = [['Codigo', 'Estado', 'Nombre arte', 'Nombre', 'Email', 'Personas', 'Pelicula', 'Fecha funcion', 'Hora', 'Enviado']];
+  filtradas().forEach(r => filas.push([
+    r.codigo || r.id, r.estado || 'activa', r.nombreArte || '', r.nombre || '', r.email || '', r.personas || 0,
+    r.peliculaTitulo || '', r.fecha || '', r.hora || '', formatearTimestamp(r.creadoEn)
+  ]));
+  const csv = filas.map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `inscripciones-lafita-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+
+function normalizar(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function formatearTimestamp(ts) {
+  return ts && ts.toDate ? ts.toDate().toLocaleString(LANG) : '';
+}
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function traducirError(code) {
+  return ({
+    'auth/invalid-credential': t('login_bad'),
+    'auth/wrong-password': t('login_bad'),
+    'auth/user-not-found': t('login_nouser'),
+    'auth/invalid-email': t('login_badmail')
+  })[code] || t('login_other', { msg: code });
+}
+
+initLangSwitch();
+document.addEventListener('langchange', () => {
+  if (usuarioActual) document.getElementById('usuario-actual').textContent = t('connected_as', { email: usuarioActual });
+  actualizarFiltro();
+  render();
+});
+</script>
+
+</body>
+</html>

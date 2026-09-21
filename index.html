@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAFITA Tickets 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Oswald:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="wordmark">LAFITA</span><span class="tag">Tickets</span></a>
+    <div class="header-right">
+      <div class="lang-switch"></div>
+      <div class="header-dates">25.–29.11.2026<small data-i18n="header_sub"></small></div>
+    </div>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="inner">
+    <h1 data-i18n="intro_h1"></h1>
+    <p>Lateinamerikanische Filmtage München · 25.–29.11.2026</p>
+    <div class="how"><span data-i18n="step1"></span><span data-i18n="step2"></span><span data-i18n="step3"></span></div>
+    <p class="home-manage" data-i18n="home_manage"></p>
+    <div class="info-box">
+      <div>
+        <h2 data-i18n="hp8_title"></h2>
+        <p data-i18n="hp8_text"></p>
+      </div>
+      <div>
+        <h2 data-i18n="other_title"></h2>
+        <p data-i18n="other_text"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div id="estado" class="alert info" data-i18n="loading_program"></div>
+  <div id="programa"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="inner">
+    <span>LAFITA · Lateinamerikanische Filmtage München</span>
+    <span><a href="https://lafita.de">lafita.de</a> · <a href="admin.html">Team</a></span>
+  </div>
+</footer>
+
+<script src="i18n.js"></script>
+<script>
+let peliculas = null;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function render() {
+  const cont = document.getElementById('programa');
+  if (!peliculas) return;
+  if (!peliculas.length) { cont.innerHTML = `<p>${t('no_films')}</p>`; return; }
+
+  // Agrupar por día, en orden
+  const dias = {};
+  peliculas.forEach(p => (dias[p.fecha] = dias[p.fecha] || []).push(p));
+
+  cont.innerHTML = Object.entries(dias).map(([fecha, lista]) => `
+    <section class="day">
+      <h2 class="day-title">${diaCorto(fecha)}</h2>
+      ${lista.map(p => `
+        <article class="screening">
+          <div class="when"><span class="time">${esc(p.hora)}</span><span class="venue">${esc(p.lugar)}</span></div>
+          <div>
+            ${p.poster ? `<img class="poster" src="${esc(p.poster)}" alt="">` : ''}
+            <h3 class="film-title">${esc(p.titulo)}</h3>
+            <p class="film-meta">${esc(p.sinopsis)}</p>
+          </div>
+          ${p.enlaceExterno
+            ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
+            : `<a class="btn" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${t('btn_reserve')}</a>`}
+        </article>`).join('')}
+    </section>`).join('');
+}
+
+async function cargarPrograma() {
+  const estado = document.getElementById('estado');
+  try {
+    peliculas = await (await fetch('movies.json', { cache: 'no-store' })).json();
+    peliculas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+    estado.remove();
+    render();
+  } catch (e) {
+    estado.className = 'alert error';
+    estado.removeAttribute('data-i18n');
+    estado.textContent = t('error_program', { msg: e.message });
+  }
+}
+
+initLangSwitch();
+document.addEventListener('langchange', render);
+cargarPrograma();
+</script>
+
+</body>
+</html>
