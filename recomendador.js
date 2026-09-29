@@ -4,15 +4,23 @@
 // La persona escribe en cualquiera de los 4 idiomas qué le apetece
 // ("el viernes por la noche, algo chileno", "Doku am Wochenende",
 // "after 8pm, something from Mexico"...). Aquí se entiende ese texto
-// sin servidor ni IA externa: se buscan palabras de día, hora, tipo
-// (ficción / documental / cortos), género, país y duración, y se
-// puntúa cada función de movies.json.
+// sin servidor: se buscan palabras de día, hora, tipo (ficción /
+// documental / cortos), género, país, duración, temas y tono
+// ("misterio", "algo tierno"), referencias ("como David Lynch") y
+// palabras de la trama o del reparto, y se puntúa cada función.
+// Si hay un servicio de IA configurado (RECOMENDADOR_IA_URL, ver
+// README), index.html lo usa primero y esto queda como respaldo.
 //
 // Datos que usa de cada película (movies.json):
 //   fecha, hora, sinopsis (tipo, países en alemán, "108 min", "Regie: …")
-//   generos (opcional): lista de claves de GENEROS, p. ej. ["drama", "comedia"]
-//   tipo (opcional): "ficcion" | "documental" | "cortos" si la sinopsis no lo dice
+//   generos, temas: claves de GENEROS y TEMAS, p. ej. ["drama"], ["misterio"]
+//   trama: { de, es, en, pt }, reparto: [...], direccion
+//   tipo, duracion, paises (opcionales): si la sinopsis no lo dice
 // ============================================================
+
+// Dirección del servicio de IA (opcional, ver README → "Recomendador con IA").
+// Vacío = solo el motor local de este archivo.
+const RECOMENDADOR_IA_URL = '';
 
 function normalizar(s) {
   return String(s || '').toLowerCase().replace(/ß/g, 'ss')
@@ -55,7 +63,7 @@ const TIPOS = {
 const GENEROS = {
   drama:    { re: /\bdram/, n: { de: 'Drama', es: 'drama', en: 'drama', pt: 'drama' } },
   comedia:  { re: /\b(komod|comed|humor|lustig|witzig|funny|divertid|engracad|reir\b|lachen|laugh|rir\b)/, n: { de: 'Komödie', es: 'comedia', en: 'comedy', pt: 'comédia' } },
-  thriller: { re: /\b(thrill|suspens|spannend|spannung|krimi|crime|policia|mister|myster)/, n: { de: 'Thriller', es: 'thriller', en: 'thriller', pt: 'thriller' } },
+  thriller: { re: /\b(thrill|suspens|spannend|spannung|krimi|crime|policia)/, n: { de: 'Thriller', es: 'thriller', en: 'thriller', pt: 'thriller' } },
   terror:   { re: /\b(horror|terror|grusel|miedo|scary|medo\b|susto)/, n: { de: 'Horror', es: 'terror', en: 'horror', pt: 'terror' } },
   romance:  { re: /\b(romanc|romant|liebe|amor\b|love\b)/, n: { de: 'Liebesfilm', es: 'romance', en: 'romance', pt: 'romance' } },
   musica:   { re: /\b(musi)/, n: { de: 'Musik', es: 'música', en: 'music', pt: 'música' } },
@@ -99,6 +107,79 @@ const ZONAS = [
   { re: /\b(europa|europe|europ\w+)\b/, zonas: ['europa'], n: { de: 'Europa', es: 'Europa', en: 'Europe', pt: 'Europa' } }
 ];
 
+// Temas y tono: se ponen en "temas" (o "generos") de movies.json
+const TEMAS = {
+  misterio:     { re: /\b(mister|myster|geheimnis|enigm|intriga|whodunit|desaparec|verschwind|disappear|desapar)/, n: { de: 'Mystery', es: 'misterio', en: 'mystery', pt: 'mistério' } },
+  onirico:      { re: /\b(onir|surreal|traumhaft|traumartig|dream|sueno|sonho|alucin|halluc|weird|bizarr|seltsam|extran|estranh|kafka)/, n: { de: 'traumartige Stimmung', es: 'atmósfera onírica', en: 'dreamlike mood', pt: 'clima onírico' } },
+  inquietante:  { re: /\b(inquiet|perturb|unsettl|unheimlich|verstor|beklemm|creepy|tension|dread|atmosf|atmosph|angustia|mulmig)/, n: { de: 'beklemmende Atmosphäre', es: 'tono inquietante', en: 'unsettling tone', pt: 'tom inquietante' } },
+  oscuro:       { re: /\b(oscur|dark\b|dunkel|duster|sombri|escur|gotic|gothic|gotisch)/, n: { de: 'düster', es: 'oscura', en: 'dark', pt: 'sombria' } },
+  noir:         { re: /\b(noir|cine negro)/, n: { de: 'Noir', es: 'noir', en: 'noir', pt: 'noir' } },
+  humor_negro:  { re: /\b(humor negro|schwarz\w* humor|dark (comedy|humou?r)|sarcas|sardon|ironi|absurd)/, n: { de: 'schwarzer Humor', es: 'humor negro', en: 'dark humour', pt: 'humor negro' } },
+  ternura:      { re: /\b(tiern|ternur|tern[oa]\b|tender|zartlich|herzlich|warmherzig|conmov|moving|beruhr|emotiv|feel[- ]?good|bonit|sweet|dulce|entranabl|heartwarming)/, n: { de: 'Zärtlichkeit', es: 'ternura', en: 'tenderness', pt: 'ternura' } },
+  melancolia:   { re: /\b(melanc|triste|sad\b|traurig|nostalg|llorar|weinen|cry\b|chorar)/, n: { de: 'Melancholie', es: 'melancolía', en: 'melancholy', pt: 'melancolia' } },
+  infancia:     { re: /\b(infan|ninos?\b|ninas?\b|kindheit|kinder\b|child|kids?\b|crianc|menin[oa])/, n: { de: 'Kindheit', es: 'infancia', en: 'childhood', pt: 'infância' } },
+  memoria:      { re: /\b(memori|erinner|memory|olvid|vergessen|forget|vergangenheit|passado)/, n: { de: 'Erinnerung', es: 'memoria', en: 'memory', pt: 'memória' } },
+  duelo:        { re: /\b(trauma|duelo|grief|trauer|luto|perdida|verlust|loss\b|sanar|heilung|heal|supervivi|uberleb|surviv|sobreviv)/, n: { de: 'Trauma und Trauer', es: 'trauma y duelo', en: 'trauma and grief', pt: 'trauma e luto' } },
+  mujeres:      { re: /\b(femin|mujer|frauen|women|woman|mulher|femizid|sororid|hermanas|schwestern|sisters|irmas)/, n: { de: 'Frauenfiguren', es: 'mujeres', en: 'women', pt: 'mulheres' } },
+  masculinidad: { re: /\b(masculin|mannlich|toxic|toxisch|machis|misogin|misogyn)/, n: { de: 'Männlichkeit', es: 'masculinidad', en: 'masculinity', pt: 'masculinidade' } },
+  violencia:    { re: /\b(violen|gewalt|sangr|blood|blut|brutal|slasher|giallo|gore)/, n: { de: 'Gewalt', es: 'violencia', en: 'violence', pt: 'violência' } },
+  venganza:     { re: /\b(vengan|revenge|rache|vinganc|western)/, n: { de: 'Rache', es: 'venganza', en: 'revenge', pt: 'vingança' } },
+  herencia:     { re: /\b(herenc|inherit|erbe\b|erbschaft|heranc|coloni|kolonial|plantac|plantag|cacao|kakao|hacienda)/, n: { de: 'Erbe und Kolonialgeschichte', es: 'herencia y pasado colonial', en: 'inheritance and colonial past', pt: 'herança e passado colonial' } },
+  esoterico:    { re: /\b(esoter|okkult|occult|espiritu|spiritu|brujer|witch|hexe|sekte|secta|cult\b|magia\b|magie|magic)/, n: { de: 'Esoterik', es: 'lo esotérico', en: 'the esoteric', pt: 'o esotérico' } },
+  rock:         { re: /\b(rock|elvis|fifties|50er|anos 50|rockabilly)/, n: { de: 'Rock ’n’ Roll', es: 'rock and roll', en: 'rock ’n’ roll', pt: 'rock and roll' } },
+  tango:        { re: /\b(tango|gardel|milonga|bandone)/, n: { de: 'Tango', es: 'tango', en: 'tango', pt: 'tango' } },
+  guitarra:     { re: /\b(guitarr|gitarr|guitar|violao|violoes|luthier)/, n: { de: 'Gitarre', es: 'guitarra', en: 'guitar', pt: 'violão' } },
+  migracion:    { re: /\b(migra|inmigr|immigr|imigra|einwander|exil|refugi|fluchtling|asyl|frontera|fronteira|xenofob|fremdenfeind|rassis|racism)/, n: { de: 'Migration', es: 'migración', en: 'migration', pt: 'migração' } },
+  arte:         { re: /\b(arte\b|artista|artist|kunst|pintur|painting|maler|pintor|grabad|printmak)/, n: { de: 'Kunst', es: 'arte', en: 'art', pt: 'arte' } },
+  biografia:    { re: /\b(biogra|retrato de|portrat|portrait)/, n: { de: 'Porträt', es: 'retrato biográfico', en: 'biographical portrait', pt: 'retrato biográfico' } },
+  amistad:      { re: /\b(amistad|freundschaft|friendship|amizade)/, n: { de: 'Freundschaft', es: 'amistad', en: 'friendship', pt: 'amizade' } },
+  nieve:        { re: /\b(nieve|schnee|snow|neve\b|esqui|ski\b|montan|mountain|berge\b|hielo|eisig|icy)/, n: { de: 'Schnee und Berge', es: 'nieve y montaña', en: 'snow and mountains', pt: 'neve e montanha' } },
+  desierto:     { re: /\b(desiert|wuste|desert|atacama)/, n: { de: 'Wüste', es: 'desierto', en: 'desert', pt: 'deserto' } },
+  playa:        { re: /\b(playa|strand|beach|praia|verano|sommer|summer|verao)/, n: { de: 'Strand und Sommer', es: 'playa y verano', en: 'beach and summer', pt: 'praia e verão' } },
+  selva:        { re: /\b(selva|jungle|dschungel|tropic|tropen|floresta)/, n: { de: 'Dschungel', es: 'selva', en: 'jungle', pt: 'selva' } },
+  huida:        { re: /\b(huida|huir|fuga\b|fugitiv|on the run|road ?movie|auf der flucht)/, n: { de: 'auf der Flucht', es: 'huida', en: 'on the run', pt: 'fuga' } },
+  blanco_negro: { re: /\b(blanco y negro|black[- ]and[- ]white|schwarz[- ]?weiss|preto e branco|b&w)/, n: { de: 'Schwarz-Weiß', es: 'blanco y negro', en: 'black and white', pt: 'preto e branco' } },
+  personal:     { re: /\b(primera persona|first[- ]person|primeira pessoa|ich-perspektive|diario|tagebuch|diary|ensayo|essay)/, n: { de: 'persönliche Perspektive', es: 'mirada en primera persona', en: 'first-person perspective', pt: 'olhar em primeira pessoa' } }
+};
+
+// Referencias: "me gusta David Lynch" → temas parecidos (clave de TEMAS o GENEROS)
+const REFERENCIAS = [
+  { re: /\b(david lynch|lynch\w*|twin peaks|blue velvet|terciopelo azul|mulholland|lost highway|carretera perdida)\b/, nombre: 'David Lynch', temas: ['misterio', 'onirico', 'inquietante', 'oscuro', 'noir'] },
+  { re: /\b(hitchcock|vertigo)\b/, nombre: 'Hitchcock', temas: ['misterio', 'inquietante', 'thriller'] },
+  { re: /\b(dario argento|giallo|suspiria)\b/, nombre: 'Dario Argento', temas: ['terror', 'violencia', 'onirico'] },
+  { re: /\btarantino\b/, nombre: 'Tarantino', temas: ['violencia', 'venganza', 'humor_negro'] },
+  { re: /\balmodovar\b/, nombre: 'Almodóvar', temas: ['mujeres', 'familia', 'lgbtiq', 'humor_negro'] },
+  { re: /\bwes anderson\b/, nombre: 'Wes Anderson', temas: ['ternura', 'comedia', 'familia'] },
+  { re: /\bbaumbach\b/, nombre: 'Noah Baumbach', temas: ['familia', 'humor_negro', 'comedia'] },
+  { re: /\b(haneke|funny games|white ribbon|weisse band|cinta blanca)\b/, nombre: 'Michael Haneke', temas: ['inquietante', 'violencia', 'oscuro'] },
+  { re: /\b(lucrecia martel|la cienaga|zama)\b/, nombre: 'Lucrecia Martel', temas: ['inquietante', 'familia', 'misterio'] },
+  { re: /\b(kaurismaki|jarmusch)\b/, nombre: 'Kaurismäki / Jarmusch', temas: ['ternura', 'comedia', 'melancolia', 'blanco_negro'] },
+  { re: /\bcuaron\b/, nombre: 'Alfonso Cuarón', temas: ['blanco_negro', 'infancia', 'familia', 'memoria'] },
+  { re: /\blarrain\b/, nombre: 'Pablo Larraín', temas: ['politica', 'oscuro', 'memoria'] },
+  { re: /\b(coen|fargo)\b/, nombre: 'los Coen', temas: ['humor_negro', 'thriller', 'violencia', 'huida'] },
+  { re: /\b(del toro|laberinto del fauno|pan'?s labyrinth)\b/, nombre: 'Guillermo del Toro', temas: ['terror', 'onirico', 'politica'] },
+  { re: /\b(bong joon|parasite|parasitos|parasiten)\b/, nombre: 'Bong Joon-ho', temas: ['humor_negro', 'thriller', 'familia'] },
+  { re: /\bbergman\b/, nombre: 'Bergman', temas: ['familia', 'duelo', 'melancolia'] },
+  { re: /\b(kiarostami|panahi)\b/, nombre: 'Kiarostami', temas: ['ternura', 'infancia'] },
+  { re: /\b(ken loach|loach|dardenne)\b/, nombre: 'Ken Loach / Dardenne', temas: ['politica', 'migracion'] },
+  { re: /\b(apichatpong|weerasethakul)\b/, nombre: 'Apichatpong', temas: ['onirico', 'selva'] },
+  { re: /\b(sofia coppola|virgin suicides)\b/, nombre: 'Sofia Coppola', temas: ['juventud', 'mujeres', 'melancolia'] },
+  { re: /\b(linklater|boyhood)\b/, nombre: 'Linklater', temas: ['juventud', 'infancia'] },
+  { re: /\b(call me by your name|guadagnino)\b/, nombre: 'Guadagnino', temas: ['lgbtiq', 'juventud', 'romance', 'playa'] },
+  { re: /\b(realismo magico|magischer? realismus|magic(al)? realism|garcia marquez|cortazar|borges)\b/, nombre: 'realismo mágico', temas: ['onirico', 'esoterico'] }
+];
+
+function nombreTema(k) { const x = TEMAS[k] || GENEROS[k]; return x ? (x.n[LANG] || x.n.de) : k; }
+
+// Palabras que no dicen nada del tema (para buscar en la trama)
+const VACIAS = new Set(('quiero quisiera busco buscando algo alguna alguno pelicula peliculas peli pelis film filme filmes films movie movies cine kino ' +
+  'gusta gustan gustaria mucho muchos mucha muito muita sehr gerne mochte mag something anything about sobre donde where which ' +
+  'tengo tiene tienen haben habe would could should really realmente bastante eine einen einem einer etwas nicht keine ' +
+  'como parecido parecida similar ahnlich igual semelhante tipo estilo style gente leute people personas pessoas ' +
+  'ver sehen watch assistir mirar dieser diese esta este isso esse essa quiere queremos amigos freunden friends ' +
+  'noche tarde abend evening night noite despues antes nach before after desde hasta semana woche week ' +
+  'quero gostaria gosto adorei gostei loved liked enjoyed really wanted want would assim parecido algum alguma mochte liebe finde').split(' '));
+
 function nombrePais(p) { return LANG === 'de' ? p.de : (p.n[LANG] || p.de); }
 function nombreGenero(k) { return GENEROS[k].n[LANG] || GENEROS[k].n.de; }
 
@@ -118,12 +199,17 @@ function datosPelicula(p) {
   const [h, m] = String(p.hora || '0:0').split(':').map(Number);
   return {
     tipo,
-    paises: PAISES.filter(x => new RegExp('\\b' + x.de + '\\b').test(s)),
+    paises: Array.isArray(p.paises)
+      ? PAISES.filter(x => p.paises.includes(x.de))
+      : PAISES.filter(x => new RegExp('\\b' + x.de + '\\b').test(s)),
     generos: Array.isArray(p.generos) ? p.generos.filter(g => GENEROS[g]) : [],
-    minutos: dur ? Number(dur[1]) : null,
+    temas: [...new Set([...(p.temas || []), ...(p.generos || [])])],
+    reparto: Array.isArray(p.reparto) ? p.reparto : [],
+    texto: normalizar([p.titulo, p.sinopsis, p.direccion, ...(p.reparto || []), ...Object.values(p.trama || {})].join(' ')),
+    minutos: p.duracion || (dur ? Number(dur[1]) : null),
     hora: h + (m || 0) / 60,
     dia: new Date(p.fecha + 'T00:00:00').getDay(),
-    directores: regie ? regie[1].split(/,|\bund\b|&/).map(x => x.trim()).filter(Boolean) : []
+    directores: (p.direccion || (regie ? regie[1] : '')).split(/,|\bund\b|&/).map(x => x.trim()).filter(Boolean)
   };
 }
 
@@ -140,7 +226,8 @@ function interpretar(texto, peliculas, hoyISO) {
   let q = ' ' + normalizar(texto) + ' ';
   // "Freitagabend" → "freitag abend"
   q = q.replace(/(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)(abend|nachmittag|mittag|nacht)/g, '$1 $2');
-  const c = { dias: new Set(), franjas: [], desde: null, hasta: null, tipos: new Set(), generos: new Set(), paises: new Set(), zonas: [], maxMin: null, textos: [] };
+  const c = { dias: new Set(), franjas: [], desde: null, hasta: null, tipos: new Set(), generos: new Set(), paises: new Set(), zonas: [], maxMin: null, textos: [], temas: new Set(), refs: [], palabras: [], reparto: [] };
+  const original = ' ' + normalizar(texto) + ' ';
 
   // Fechas del festival: "27.11", "27/11", "27 de noviembre", "nov 27", "am 27."
   const fechas = [...new Set(peliculas.map(p => p.fecha))];
@@ -182,6 +269,10 @@ function interpretar(texto, peliculas, hoyISO) {
 
   for (const [k, g] of Object.entries(GENEROS)) if (g.re.test(q)) c.generos.add(k);
 
+  // Referencias ("como David Lynch") y temas ("algo inquietante", "sobre migración")
+  REFERENCIAS.forEach(r => { if (r.re.test(q)) { c.refs.push(r); q = q.replace(r.re, ' '); } });
+  for (const [k, x] of Object.entries(TEMAS)) if (x.re.test(q)) c.temas.add(k);
+
   PAISES.forEach(p => { if (p.re.test(q)) c.paises.add(p.de); });
   ZONAS.forEach(z => {
     if (!z.re.test(q)) return;
@@ -200,7 +291,25 @@ function interpretar(texto, peliculas, hoyISO) {
     });
   });
 
-  c.vacio = !c.dias.size && !c.franjas.length && c.desde == null && c.hasta == null && !c.tipos.size &&
+  // Reparto: nombre completo o apellido
+  peliculas.forEach(p => (p.reparto || []).forEach(nombre => {
+    const n = normalizar(nombre), ap = n.split(' ').pop();
+    if ((original.includes(n) || (ap.length >= 5 && new RegExp('\\b' + ap + '\\b').test(original))) && !c.reparto.includes(nombre)) c.reparto.push(nombre);
+  }));
+
+  // Palabras sueltas que quedan (para buscar en la trama): "guitarras", "cacao", "Iquique"…
+  const quedan = q;
+  c.palabras = [...new Set(quedan.split(/[^a-z0-9ñ]+/).filter(w => w.length >= 5 && !VACIAS.has(w) && !/^\d+$/.test(w)))]
+    .filter(w => {
+      const x = ' ' + w + ' ';
+      const yaEntendida = [...DIAS_RE, FINDE_RE, HOY_RE, MANANA_RE, ...FRANJAS.map(f => f.re), ...Object.values(TIPOS),
+        ...Object.values(TEMAS).map(v => v.re), ...Object.values(GENEROS).map(v => v.re), ...PAISES.map(v => v.re), ...ZONAS.map(v => v.re)]
+        .some(re => re.test(x));
+      const esNombre = [...c.textos.map(v => v.q), ...c.reparto].some(n => normalizar(n).includes(w));
+      return !yaEntendida && !esNombre;
+    });
+
+  c.vacio = !c.refs.length && !c.temas.size && !c.reparto.length && !c.palabras.length && !c.dias.size && !c.franjas.length && c.desde == null && c.hasta == null && !c.tipos.size &&
     !c.generos.size && !c.paises.size && c.maxMin == null && !c.textos.length;
   return c;
 }
@@ -247,6 +356,32 @@ function evaluar(p, c, libres) {
     total += 1;
     if (d.minutos <= c.maxMin) { puntos += 1; si.push(t('r_len', { n: d.minutos })); } else no.push(t('m_len', { n: d.minutos }));
   }
+  // Afinidad (suma, pero no resta): referencias, temas, reparto y trama
+  const suyos = new Set(d.temas);
+  let afin = 0;
+  c.refs.forEach(r => {
+    const comunes = r.temas.filter(k => suyos.has(k));
+    total += 3;
+    if (comunes.length) { afin++; puntos += comunes.length; si.push(t('r_ref', { ref: r.nombre, list: comunes.map(nombreTema).join(', ') })); }
+  });
+  const pedidos = [...c.temas];
+  if (pedidos.length) {
+    total += 2 * pedidos.length;
+    const comunes = pedidos.filter(k => suyos.has(k));
+    if (comunes.length) { afin++; puntos += 2 * comunes.length; si.push(t('r_tema', { list: comunes.map(nombreTema).join(', ') })); }
+  }
+  const actores = c.reparto.filter(n => d.reparto.includes(n));
+  if (c.reparto.length) total += 4;
+  if (actores.length) { afin++; puntos += 4; si.unshift(t('r_cast', { name: actores.join(', ') })); }
+  if (c.palabras.length) {
+    const halladas = c.palabras.filter(w => new RegExp('\\b' + w.slice(0, Math.max(5, w.length - 2))).test(d.texto));
+    total += 2;
+    if (halladas.length) { afin++; puntos += Math.min(4, 2 * halladas.length); si.push(t('r_plot', { q: halladas.join(', ') })); }
+  }
+
+  const blandos = c.refs.length || c.temas.size || c.reparto.length || c.palabras.length;
+  if (blandos && !afin) no.push(t('m_afin'));
+
   const texto = c.textos.find(x => x.id === p.id);
   if (texto) { puntos += 4; si.unshift(t('r_text', { q: texto.q })); }
   if (c.textos.length) total += 4;
@@ -288,6 +423,10 @@ function resumenCriterios(c) {
   PAISES.filter(p => c.paises.has(p.de) && !enZona.has(p.de)).forEach(p => out.push(nombrePais(p)));
   if (c.maxMin != null) out.push(t('lbl_maxlen', { n: c.maxMin }));
   c.textos.forEach(x => out.push('«' + x.q + '»'));
+  c.refs.forEach(r => out.push(t('lbl_ref', { ref: r.nombre })));
+  c.temas.forEach(k => out.push(nombreTema(k)));
+  c.reparto.forEach(n => out.push(n));
+  c.palabras.forEach(w => out.push('«' + w + '»'));
   return [...new Set(out)];
 }
 

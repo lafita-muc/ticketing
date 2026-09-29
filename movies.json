@@ -8,7 +8,33 @@
     "hora": "18:30",
     "lugar": "Kulturzentrum Luise",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "direccion": "Manuela Martelli",
+    "reparto": [
+      "Maya O'Rourke",
+      "Saskia Rosendahl",
+      "Jakub Gierszał",
+      "Paulina Urrutia",
+      "Maia Rae Domagala"
+    ],
+    "generos": [
+      "drama",
+      "thriller",
+      "juventud"
+    ],
+    "temas": [
+      "misterio",
+      "inquietante",
+      "infancia",
+      "memoria",
+      "nieve"
+    ],
+    "trama": {
+      "de": "Chile, 1992: Während ihre Eltern auf der Expo in Sevilla sind, verbringt die neunjährige Inés den Winter im Hotel ihrer Großeltern in einem Skigebiet im Süden Chiles. Sie freundet sich mit Hanna an, einer jungen deutschen Skifahrerin – bis Hanna plötzlich verschwindet und Inés zur unerwarteten Zeugin wird. Ein atmosphärisches, eisiges Mysterydrama über Kindheit und das Vergessen nach der Diktatur.",
+      "es": "Chile, 1992: mientras sus padres están en la Expo de Sevilla, Inés, de nueve años, pasa el invierno en el hotel de sus abuelos en un centro de esquí del sur de Chile. Allí se hace amiga de Hanna, una joven esquiadora alemana, hasta que Hanna desaparece de repente e Inés se convierte en testigo clave. Un drama de misterio helado y atmosférico sobre la infancia y el olvido después de la dictadura.",
+      "en": "Chile, 1992: while her parents are at the Seville Expo, nine-year-old Inés spends the winter at her grandparents’ hotel in a ski resort in southern Chile. She befriends Hanna, a young German skier – until Hanna suddenly disappears and Inés becomes the unlikely key witness. A chilly, atmospheric mystery about childhood and post-dictatorship forgetting.",
+      "pt": "Chile, 1992: enquanto os pais estão na Expo de Sevilha, Inés, de nove anos, passa o inverno no hotel dos avós numa estação de esqui no sul do Chile. Lá fica amiga de Hanna, uma jovem esquiadora alemã – até que Hanna desaparece de repente e Inés se torna testemunha-chave. Um drama de mistério gélido e atmosférico sobre a infância e o esquecimento depois da ditadura."
+    }
   },
   {
     "id": "kurzfilmprogramm-el-sonido-de-antes-1126",
@@ -19,7 +45,24 @@
     "hora": "18:00",
     "lugar": "Werkstattkino",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "direccion": "Yael Szmulewicz",
+    "paises": [
+      "Argentinien"
+    ],
+    "generos": [
+      "musica"
+    ],
+    "temas": [
+      "tango",
+      "guitarra"
+    ],
+    "trama": {
+      "de": "Kurzfilmprogramm und EL SONIDO DE ANTES (Argentinien), ein Dokumentarfilm über den Gitarrensammler Patricio Crom: Er findet eine alte Gitarre wie die von Carlos Gardel und will mit Gitarristen, Gitarrenbauern und Tontechnikern ihren ursprünglichen Klang wiederfinden. Eine Liebeserklärung an die Gitarre und den Tango.",
+      "es": "Programa de cortos y EL SONIDO DE ANTES (Argentina), documental sobre Patricio Crom, coleccionista de guitarras antiguas: encuentra una guitarra como la que usaba Carlos Gardel y reúne a guitarristas, luthiers y técnicos de sonido para recuperar su sonido original. Una oda a la guitarra y al tango.",
+      "en": "Short film programme plus EL SONIDO DE ANTES (Argentina), a documentary about antique-guitar collector Patricio Crom: he finds a guitar like the one Carlos Gardel played and brings together guitarists, luthiers and recording experts to recover its original sound. A love letter to the guitar and to tango.",
+      "pt": "Programa de curtas e EL SONIDO DE ANTES (Argentina), documentário sobre Patricio Crom, colecionador de violões antigos: ele encontra um violão como o de Carlos Gardel e reúne violonistas, luthiers e técnicos de som para recuperar o seu som original. Uma ode ao violão e ao tango."
+    }
   },
   {
     "id": "siempre-soy-tu-animal-materno-1126",
@@ -30,7 +73,36 @@
     "hora": "20:00",
     "lugar": "Werkstattkino",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "direccion": "Valentina Maurel",
+    "reparto": [
+      "Daniela Marín Navarro",
+      "Mariangel Villegas",
+      "Mariana de Tavira"
+    ],
+    "paises": [
+      "Costa Rica",
+      "Belgien",
+      "Frankreich",
+      "Mexiko"
+    ],
+    "generos": [
+      "drama",
+      "comedia",
+      "familia"
+    ],
+    "temas": [
+      "humor_negro",
+      "mujeres",
+      "esoterico",
+      "inquietante"
+    ],
+    "trama": {
+      "de": "Nach Jahren in Europa kehrt Elsa nach Costa Rica zurück und findet ihre jüngere Schwester Amalia allein im Elternhaus – immer verschlossener und gefangen in esoterischen Ideen. Doch weder der Vater, beschäftigt mit neuen Beziehungen, noch die Mutter, die ihre erotischen Jugendgedichte neu herausgibt, nehmen es ernst. Eine schwarzhumorige, beklemmende Familiengeschichte; in Cannes 2026 gewannen die drei Hauptdarstellerinnen den Darstellerinnenpreis.",
+      "es": "Tras años estudiando en Europa, Elsa vuelve a Costa Rica y encuentra a su hermana menor, Amalia, sola en la casa familiar, cada vez más aislada y atrapada en creencias esotéricas. Ni su padre, ocupado en nuevas relaciones, ni su madre, que reedita sus poemas eróticos de juventud, parecen ver la gravedad. Una historia familiar de humor negro e inquietante; sus tres actrices ganaron el premio a mejor interpretación en Cannes 2026.",
+      "en": "After years studying in Europe, Elsa returns to Costa Rica and finds her younger sister Amalia alone in the family home, increasingly withdrawn and caught up in esoteric beliefs. Neither their father, busy with new relationships, nor their mother, republishing the erotic poems of her youth, seems to grasp how serious it is. A darkly funny, unsettling family portrait; its three leads shared the acting award in Cannes 2026.",
+      "pt": "Depois de anos estudando na Europa, Elsa volta à Costa Rica e encontra a irmã mais nova, Amalia, sozinha na casa da família, cada vez mais isolada e presa a crenças esotéricas. Nem o pai, ocupado com novos relacionamentos, nem a mãe, que reedita os poemas eróticos da juventude, parecem perceber a gravidade. Uma história de família com humor negro e inquietante; as três atrizes ganharam o prêmio de interpretação em Cannes 2026."
+    }
   },
   {
     "id": "el-brujo-1127",
@@ -41,7 +113,22 @@
     "hora": "18:00",
     "lugar": "Werkstattkino",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "tipo": "documental",
+    "duracion": 80,
+    "direccion": "Félix Guardia",
+    "generos": [],
+    "temas": [
+      "arte",
+      "biografia",
+      "amistad"
+    ],
+    "trama": {
+      "de": "EL BRUJO: JULIO ZACHRISSON – Porträt des panamaischen Künstlers Julio Zachrisson (1927–2021), der in Madrid lebte und im Alter erblindete, erzählt über die unerwartete Freundschaft mit einem jungen Filmemacher aus Panama. Publikumspreis beim Filmfestival Panama; ausgezeichnet für die Filmmusik (IDA Documentary Awards).",
+      "es": "EL BRUJO: JULIO ZACHRISSON – retrato íntimo del artista panameño Julio Zachrisson (1927–2021), que vivió en Madrid y se quedó ciego en la vejez, contado a través de su inesperada amistad con un joven cineasta panameño. Premio del público en el Festival de Cine de Panamá y premio a la música original en los IDA Documentary Awards.",
+      "en": "EL BRUJO: JULIO ZACHRISSON – an intimate portrait of Panamanian artist Julio Zachrisson (1927–2021), who lived in Madrid and went blind in old age, told through his unexpected friendship with a young Panamanian filmmaker. Audience Award at the Panama International Film Festival; best original score at the IDA Documentary Awards.",
+      "pt": "EL BRUJO: JULIO ZACHRISSON – retrato íntimo do artista panamenho Julio Zachrisson (1927–2021), que viveu em Madri e ficou cego na velhice, contado pela amizade inesperada com um jovem cineasta panamenho. Prêmio do público no Festival de Cinema do Panamá e prêmio de música original no IDA Documentary Awards."
+    }
   },
   {
     "id": "harakiri-me-haces-falta-1127",
@@ -52,7 +139,28 @@
     "hora": "20:00",
     "lugar": "Werkstattkino",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "direccion": "Alejandro Castro Arias",
+    "reparto": [
+      "Inés Efrón",
+      "Enrique San Francisco"
+    ],
+    "generos": [
+      "drama",
+      "comedia",
+      "juventud"
+    ],
+    "temas": [
+      "masculinidad",
+      "violencia",
+      "melancolia"
+    ],
+    "trama": {
+      "de": "24 Stunden in Madrid mit drei privilegierten jungen Lateinamerikanern, die durch Frust, Begehren und Groll gegenüber Frauen verbunden sind. Aus der Neugier auf eine geheimnisvolle Nachbarin wird eine Obsession, die in einer chaotischen Nacht endet. Ein roher, melancholischer Blick auf toxische Männlichkeit – Debüt des panamaisch-italienischen Regisseurs, Preis für das beste Debüt in Oldenburg. Letzter Filmauftritt von Enrique San Francisco.",
+      "es": "24 horas en Madrid con tres jóvenes latinoamericanos privilegiados, unidos por la frustración, el deseo y el resentimiento hacia las mujeres. La curiosidad por una vecina misteriosa se convierte en obsesión y acaba en una noche de caos. Un retrato crudo y melancólico de la masculinidad tóxica; ópera prima del director panameño-italiano, premio al mejor debut en Oldenburg. Última aparición en pantalla de Enrique San Francisco.",
+      "en": "24 hours in Madrid with three privileged young Latin Americans bound by frustration, desire and resentment towards women. Curiosity about a mysterious neighbour turns into an obsession that ends in a night of chaos. A raw, melancholic look at toxic masculinity – the Panamanian-Italian director’s debut, winner of Best Debut in Oldenburg. Enrique San Francisco’s final screen role.",
+      "pt": "24 horas em Madri com três jovens latino-americanos privilegiados, unidos pela frustração, pelo desejo e pelo ressentimento contra as mulheres. A curiosidade por uma vizinha misteriosa vira obsessão e termina numa noite de caos. Um retrato cru e melancólico da masculinidade tóxica; estreia do diretor panamenho-italiano, prêmio de melhor estreia em Oldenburg. Último papel de Enrique San Francisco."
+    }
   },
   {
     "id": "la-muerte-no-tiene-dueno-1127",
@@ -63,7 +171,31 @@
     "hora": "22:00",
     "lugar": "Werkstattkino",
     "capacidad": 30,
-    "maxEntradasPorPersona": 4
+    "maxEntradasPorPersona": 4,
+    "direccion": "Jorge Thielen Armand",
+    "reparto": [
+      "Asia Argento"
+    ],
+    "generos": [
+      "thriller",
+      "terror",
+      "drama"
+    ],
+    "temas": [
+      "onirico",
+      "inquietante",
+      "oscuro",
+      "violencia",
+      "herencia",
+      "selva",
+      "venganza"
+    ],
+    "trama": {
+      "de": "Caro (Asia Argento) reist nach Venezuela, um die Kakaoplantage ihres verstorbenen Vaters zu verkaufen – doch das Herrenhaus ist von ehemaligen Angestellten besetzt, die um jeden Preis bleiben wollen. Als sie das Recht selbst in die Hand nimmt, bricht eine im Land und in der Erinnerung vergrabene Gewalt hervor. Düster, traumartig und bedrohlich, zwischen Western, Rachedrama und Horror (Cannes, Quinzaine 2026; lief auch beim Fantastic Fest).",
+      "es": "Caro (Asia Argento) viaja a Venezuela para vender la plantación de cacao de su difunto padre, pero encuentra la casa ocupada por antiguos empleados decididos a quedarse. Cuando decide tomarse la justicia por su mano, desata una violencia enterrada en la tierra y en la memoria. Oscura, onírica y amenazante, entre western, drama de venganza y terror (Quincena de Cineastas de Cannes 2026; también pasó por Fantastic Fest).",
+      "en": "Caro (Asia Argento) travels to Venezuela to sell her late father’s cacao plantation, only to find the mansion occupied by former workers determined to stay. When she takes justice into her own hands, she unleashes a violence buried in the land and in memory. Dark, dreamlike and menacing, somewhere between western, revenge drama and horror (Cannes Directors’ Fortnight 2026; also screened at Fantastic Fest).",
+      "pt": "Caro (Asia Argento) viaja à Venezuela para vender a plantação de cacau do pai falecido, mas encontra a casa ocupada por antigos empregados decididos a ficar. Quando resolve fazer justiça com as próprias mãos, desperta uma violência enterrada na terra e na memória. Sombrio, onírico e ameaçador, entre western, drama de vingança e terror (Quinzena dos Cineastas de Cannes 2026; também passou no Fantastic Fest)."
+    }
   },
   {
     "id": "cuerpo-celeste-1128",
@@ -75,7 +207,32 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Nayra Ilic García",
+    "reparto": [
+      "Helen Mguralski",
+      "Daniela Ramírez",
+      "Néstor Cantillana",
+      "Mariana Loyola"
+    ],
+    "generos": [
+      "drama",
+      "juventud",
+      "familia",
+      "politica"
+    ],
+    "temas": [
+      "desierto",
+      "playa",
+      "memoria",
+      "duelo"
+    ],
+    "trama": {
+      "de": "Chile, Sommer 1990: Die Diktatur geht zu Ende, und die 15-jährige Celeste verbringt die Ferien mit ihrer Familie an einem Strand neben der Atacama-Wüste, bis ein Ereignis ihre Jugend zerbricht und ihre Mutter in eine Krise stürzt. Monate später kehrt sie für eine Sonnenfinsternis zurück – doch nichts ist mehr wie vorher. Ein ruhiges, ehrliches Coming-of-Age (Lobende Erwähnung in Tribeca).",
+      "es": "Chile, verano de 1990: mientras la dictadura llega a su fin, Celeste, de quince años, pasa las vacaciones con su familia en una playa junto al desierto de Atacama, hasta que un suceso fractura su adolescencia y hunde a su madre en una crisis. Meses después vuelve a ese lugar con la promesa de un eclipse solar, pero ya nada es igual. Un relato de paso a la adultez calmado y sincero (mención especial en Tribeca).",
+      "en": "Chile, summer 1990: as the dictatorship comes to an end, 15-year-old Celeste spends the holidays with her family on a beach by the Atacama Desert, until an event shatters her adolescence and plunges her mother into crisis. Months later she returns for a solar eclipse, but nothing is the same. A calm, sincere coming-of-age story (Special Jury Mention at Tribeca).",
+      "pt": "Chile, verão de 1990: enquanto a ditadura chega ao fim, Celeste, de quinze anos, passa as férias com a família numa praia junto ao deserto do Atacama, até que um acontecimento fratura a sua adolescência e mergulha a mãe numa crise. Meses depois ela volta para ver um eclipse solar, mas nada é igual. Uma história de amadurecimento calma e sincera (menção especial em Tribeca)."
+    }
   },
   {
     "id": "moscas-1128",
@@ -87,7 +244,30 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Fernando Eimbcke",
+    "reparto": [
+      "Teresa Sánchez",
+      "Hugo Ramírez",
+      "Bastian Escobar",
+      "Enrique Arreola"
+    ],
+    "generos": [
+      "comedia",
+      "drama",
+      "familia"
+    ],
+    "temas": [
+      "ternura",
+      "blanco_negro",
+      "infancia"
+    ],
+    "trama": {
+      "de": "Olga vermietet ein Zimmer an einen Mann, dessen Frau in einem nahen Krankenhaus liegt – bis sie entdeckt, dass er dort heimlich seinen kleinen Sohn versteckt. Das Kind bringt ihre kontrollierte Routine durcheinander, und die Leben der drei vermischen sich. Eine zärtliche, humorvolle Tragikomödie in Schwarz-Weiß.",
+      "es": "Olga alquila una habitación a un hombre cuya mujer está ingresada en un hospital cercano, hasta que descubre que él esconde allí a su hijo pequeño. El niño desordena su rutina controlada y las vidas de los tres acaban mezclándose. Una comedia dramática tierna y con humor, en blanco y negro.",
+      "en": "Olga rents a room to a man whose wife is in a nearby hospital – until she discovers he has been hiding his young son there. The boy upends her controlled routine and the three lives slowly intertwine. A tender, funny black-and-white dramedy.",
+      "pt": "Olga aluga um quarto a um homem cuja mulher está internada num hospital próximo, até descobrir que ele esconde ali o filho pequeno. O menino bagunça a rotina controlada dela e a vida dos três acaba se misturando. Uma comédia dramática terna e com humor, em preto e branco."
+    }
   },
   {
     "id": "narciso-1128",
@@ -99,7 +279,34 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Marcelo Martinessi",
+    "reparto": [
+      "Diro Romero",
+      "Nahuel Pérez Biscayart",
+      "Mona Martínez",
+      "Margarita Irún"
+    ],
+    "generos": [
+      "thriller",
+      "drama",
+      "musica",
+      "politica",
+      "lgbtiq"
+    ],
+    "temas": [
+      "misterio",
+      "rock",
+      "inquietante",
+      "oscuro",
+      "noir"
+    ],
+    "trama": {
+      "de": "Paraguay 1959, unter der Diktatur Stroessners: Der charismatische Narciso kommt aus Buenos Aires zurück, mit Rock ’n’ Roll im Blut, und bringt das Radio und die Jugend in Aufruhr – zum Entsetzen des Regimes. Sein früher Tod enthüllt ein Geflecht aus verborgenem Begehren und politischer Unterdrückung. Ein Mystery-Noir voller Musik und Beklemmung, nach wahren Begebenheiten (FIPRESCI-Preis, Berlinale 2026).",
+      "es": "Paraguay, 1959, bajo la dictadura de Stroessner: el carismático Narciso vuelve de Buenos Aires con el rock and roll en la sangre y revoluciona la radio y a la juventud, para alarma del régimen. Su muerte prematura destapa una trama de deseos ocultos y opresión política. Un thriller noir de misterio, cargado de música y de inquietud, inspirado en hechos reales (premio FIPRESCI, Berlinale 2026).",
+      "en": "Paraguay, 1959, under Stroessner’s dictatorship: charismatic Narciso returns from Buenos Aires with rock ’n’ roll in his blood, electrifying the radio and the young – to the regime’s alarm. His early death uncovers a web of hidden desire and political repression. A dread-soaked musical noir mystery inspired by true events (FIPRESCI Prize, Berlinale 2026).",
+      "pt": "Paraguai, 1959, sob a ditadura de Stroessner: o carismático Narciso volta de Buenos Aires com o rock and roll no sangue e agita o rádio e a juventude, para alarme do regime. A sua morte precoce revela uma trama de desejos ocultos e opressão política. Um thriller noir de mistério, cheio de música e inquietação, inspirado em fatos reais (prêmio FIPRESCI, Berlinale 2026)."
+    }
   },
   {
     "id": "si-vas-para-chile-1129",
@@ -111,7 +318,20 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Sebastián González, Amílcar Infante",
+    "generos": [
+      "politica"
+    ],
+    "temas": [
+      "migracion"
+    ],
+    "trama": {
+      "de": "2021 zogen in Iquique im Norden Chiles Menschen in einem gewalttätigen Marsch gegen Migranten und verbrannten Zelte und Habseligkeiten venezolanischer Familien. Die Bilder gingen um die Welt – die Geschichten der Betroffenen nicht. Ein intimer Dokumentarfilm über das menschliche Gesicht der größten Migrationskrise Lateinamerikas (Preis bei Hot Docs 2025).",
+      "es": "En 2021, en Iquique, en el norte de Chile, una marcha antiinmigrante violenta quemó carpas y pertenencias de familias venezolanas. Las imágenes dieron la vuelta al mundo, pero las historias de quienes lo vivieron quedaron ocultas. Un documental íntimo sobre el rostro humano de la mayor crisis migratoria de Latinoamérica (premio en Hot Docs 2025).",
+      "en": "In 2021, in Iquique in northern Chile, a violent anti-immigrant march burned the tents and belongings of Venezuelan families. The images went around the world, but the stories of the people affected stayed hidden. An intimate documentary about the human face of Latin America’s largest migration crisis (award at Hot Docs 2025).",
+      "pt": "Em 2021, em Iquique, no norte do Chile, uma marcha anti-imigrante violenta queimou barracas e pertences de famílias venezuelanas. As imagens correram o mundo, mas as histórias de quem viveu aquilo ficaram escondidas. Um documentário íntimo sobre o rosto humano da maior crise migratória da América Latina (prêmio no Hot Docs 2025)."
+    }
   },
   {
     "id": "was-an-empfindsamkeit-bleibt-1129",
@@ -123,7 +343,20 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Daniela Magnani Hüller",
+    "generos": [],
+    "temas": [
+      "duelo",
+      "mujeres",
+      "personal"
+    ],
+    "trama": {
+      "de": "Vor vierzehn Jahren überlebte die Filmemacherin Daniela Magnani Hüller einen Femizidversuch durch einen Mitschüler. In Interviews, Reflexionen und Super-8-Aufnahmen nähert sie sich dem Unbegreiflichen, dem Nachwirken des Traumas und der Idee einer Zukunft ohne Angst – bruchstückhaft und selbstbestimmt. Lobende Erwähnung der Dokumentarfilmjury der Berlinale 2026.",
+      "es": "Hace catorce años, la cineasta Daniela Magnani Hüller sobrevivió a un intento de feminicidio por parte de un compañero de colegio. Con entrevistas, reflexiones y material en Super-8, se acerca a lo incomprensible, a la huella del trauma y a la idea de un futuro sin miedo, de forma fragmentaria y en primera persona. Mención especial del jurado documental de la Berlinale 2026.",
+      "en": "Fourteen years ago, filmmaker Daniela Magnani Hüller survived an attempted femicide by a schoolmate. Through interviews, reflections and Super-8 footage she approaches the incomprehensible, the lingering trauma and the idea of a future without fear – fragmentary and in her own voice. Special Mention from the Berlinale 2026 documentary jury.",
+      "pt": "Há catorze anos, a cineasta Daniela Magnani Hüller sobreviveu a uma tentativa de feminicídio por parte de um colega de escola. Com entrevistas, reflexões e imagens em Super-8, ela se aproxima do incompreensível, das marcas do trauma e da ideia de um futuro sem medo, de forma fragmentária e em primeira pessoa. Menção especial do júri de documentários da Berlinale 2026."
+    }
   },
   {
     "id": "un-cabo-suelto-1129",
@@ -135,6 +368,29 @@
     "lugar": "Gasteig HP8",
     "capacidad": 30,
     "maxEntradasPorPersona": 4,
-    "enlaceExterno": "https://lafita.de"
+    "enlaceExterno": "https://lafita.de",
+    "direccion": "Daniel Hendler",
+    "reparto": [
+      "Sergio Prina",
+      "Pilar Gamboa",
+      "Néstor Guzzini",
+      "César Troncoso",
+      "Daniel Elías"
+    ],
+    "generos": [
+      "comedia",
+      "thriller",
+      "romance"
+    ],
+    "temas": [
+      "huida",
+      "ternura"
+    ],
+    "trama": {
+      "de": "Santiago, ein argentinischer Polizist, flieht vor seinen eigenen Kollegen über die Grenze nach Uruguay. Unterwegs improvisiert er: gibt sich als Gesundheitsinspektor aus, um umsonst zu essen, spielt Autorität für ein Bett – und verliebt sich in Clara, eine Supermarktverkäuferin. Doch seine Vergangenheit holt ihn ein. Eine lakonische Krimikomödie mit Romantik (Venedig, San Sebastián).",
+      "es": "Santiago, cabo de la policía argentina, cruza la frontera hacia Uruguay huyendo de sus propios compañeros. En cada parada improvisa: se hace pasar por inspector sanitario para comer gratis, finge autoridad para conseguir cama y se enamora de Clara, dependienta de un supermercado. Pero su pasado le persigue. Una comedia policial lacónica con romance (Venecia, San Sebastián).",
+      "en": "Santiago, an Argentine police corporal, flees across the border into Uruguay to escape his own colleagues. At every stop he improvises – posing as a health inspector for free meals, faking authority for a bed – and falls for Clara, a supermarket clerk. But his past is catching up. A deadpan crime comedy with romance (Venice, San Sebastián).",
+      "pt": "Santiago, cabo da polícia argentina, atravessa a fronteira para o Uruguai fugindo dos próprios colegas. Em cada parada improvisa: finge ser inspetor sanitário para comer de graça, finge autoridade para conseguir cama e se apaixona por Clara, caixa de supermercado. Mas o passado o persegue. Uma comédia policial lacônica com romance (Veneza, San Sebastián)."
+    }
   }
 ]
