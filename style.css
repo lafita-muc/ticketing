@@ -542,3 +542,19 @@ td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
   .rec-card { grid-template-columns: 36px 1fr; gap: 0 10px; padding-right: 14px; }
   .rec-rank { font-size: 1.7rem; }
 }
+
+/* Trama y reparto (plegable) */
+.film-more { margin-top: 8px; font-size: 0.92rem; }
+.film-more summary {
+  cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--green-dark);
+  text-transform: uppercase; letter-spacing: 0.04em; list-style: none;
+}
+.film-more summary::-webkit-details-marker { display: none; }
+.film-more summary::before { content: "+ "; }
+.film-more[open] summary::before { content: "– "; }
+.film-more p { margin: 6px 0 0; max-width: 65ch; line-height: 1.45; }
+.film-credits { display: flex; flex-wrap: wrap; gap: 2px 16px; color: var(--grey); }
+.film-credits b { color: var(--ink); font-weight: 600; }
+.rec-card .film-more { margin-top: 12px; }
+.rec-thinking::before { content: "… "; }
+.rec-ai-note { font-size: 0.82rem; }

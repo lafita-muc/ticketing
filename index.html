@@ -98,12 +98,15 @@ function botonTicket(p) {
 const HOY = new Date().toISOString().slice(0, 10);
 let consulta = '';     // último texto recomendado ('' = nada todavía)
 let avisoVacio = false;
+let ia = null;         // respuesta del servicio de IA: { consulta, lang, estado: 'pensando'|'ok'|'error', datos }
+const abiertos = new Set();   // fichas "Trama y reparto" abiertas (se mantienen al refrescar plazas)
 
 function renderChips() {
   const box = document.getElementById('rec-chips');
   if (!peliculas) { box.innerHTML = ''; return; }
   const fechas = [...new Set(peliculas.filter(p => p.fecha >= HOY).map(p => p.fecha))];
   const chips = [
+    ...t('chips_mood').map(x => [x, x]),
     ...fechas.map(f => [diaCorto(f), t('days_long')[new Date(f + 'T00:00:00').getDay()]]),
     ...t('chips_time').map(x => [x, x]),
     ...t('chips_type').map(x => [x, x]),
@@ -113,10 +116,71 @@ function renderChips() {
     `<button type="button" class="chip" data-q="${esc(texto)}">${esc(label)}</button>`).join('');
 }
 
+// Trama, dirección y reparto (plegable)
+function fichaPelicula(p, clave) {
+  const trama = p.trama && (p.trama[LANG] || p.trama.de);
+  if (!trama && !p.reparto) return '';
+  const id = clave + p.id;
+  return `<details class="film-more" data-k="${esc(id)}"${abiertos.has(id) ? ' open' : ''}>
+    <summary>${t('info_toggle')}</summary>
+    ${trama ? `<p>${esc(trama)}</p>` : ''}
+    <p class="film-credits">
+      ${p.direccion ? `<span><b>${t('lbl_dir')}:</b> ${esc(p.direccion)}</span>` : ''}
+      ${p.reparto && p.reparto.length ? `<span><b>${t('lbl_cast')}:</b> ${esc(p.reparto.join(', '))}</span>` : ''}
+    </p>
+  </details>`;
+}
+
+function tarjeta(p, i, si, no, extra) {
+  return `
+    <li class="rec-card${no.length ? ' partial' : ''}">
+      <span class="rec-rank">${i + 1}</span>
+      <div class="rec-body">
+        <p class="rec-when">${diaCorto(p.fecha)} · ${esc(p.hora)}${t('time_suffix')} · ${esc(p.lugar)}</p>
+        <h3 class="film-title">${esc(p.titulo)}</h3>
+        <p class="film-meta">${esc(p.sinopsis)}</p>
+        <ul class="rec-why">
+          ${si.map(x => `<li class="ok">${esc(x)}</li>`).join('')}
+          ${no.map(x => `<li class="warn">${esc(x)}</li>`).join('')}
+          <li class="info">${esc(extra)}</li>
+        </ul>
+        ${fichaPelicula(p, 'rec-')}
+        <div class="rec-actions">
+          ${botonTicket(p)}
+          <a class="link-btn" href="#f-${esc(p.id)}">${t('rec_see')} ↓</a>
+        </div>
+      </div>
+    </li>`;
+}
+
+function infoPractica(p) {
+  const n = libresDe(p);
+  if (p.enlaceExterno) return t('r_online');
+  if (n <= 0) return t('r_full');
+  return n === 1 ? t('r_seats_one') : t('r_seats', { n });
+}
+
+// Resultado del servicio de IA (si está configurado y respondió)
+function renderIA(out) {
+  if (ia.estado === 'pensando') { out.innerHTML = `<p class="rec-msg rec-thinking">${t('rec_thinking')}</p>`; return true; }
+  if (ia.estado !== 'ok') return false;
+  const lista = (ia.datos.recomendaciones || [])
+    .map(r => ({ p: peliculas.find(x => x.id === r.id), razon: r.razon }))
+    .filter(r => r.p && r.p.fecha >= HOY).slice(0, 3);
+  if (!lista.length) return false;   // sin nada útil: mejor el motor local
+  out.innerHTML = `
+    ${ia.datos.entendido ? `<p class="rec-understood"><span>${t('rec_understood')}</span> <span class="tagx">${esc(ia.datos.entendido)}</span></p>` : ''}
+    <h2 class="rec-results-title">${t('rec_results')}</h2>
+    <ol class="rec-list">${lista.map((r, i) => tarjeta(r.p, i, [r.razon], [], infoPractica(r.p))).join('')}</ol>
+    <p class="rec-msg rec-ai-note">${t('rec_ai_note')}</p>`;
+  return true;
+}
+
 function renderRecomendaciones() {
   const out = document.getElementById('rec-out');
   if (avisoVacio) { out.innerHTML = `<p class="rec-msg">${t('rec_empty')}</p>`; return; }
   if (!consulta || !peliculas) { out.innerHTML = ''; return; }
+  if (ia && ia.consulta === consulta && ia.lang === LANG && renderIA(out)) return;
 
   const c = interpretar(consulta, peliculas, HOY);
   if (c.vacio) { out.innerHTML = `<p class="rec-msg">${t('rec_none_understood')}</p>`; return; }
@@ -128,27 +192,31 @@ function renderRecomendaciones() {
   out.innerHTML = entendido + `
     <h2 class="rec-results-title">${t('rec_results')}</h2>
     ${exacto ? '' : `<p class="rec-msg">${t('rec_partial')}</p>`}
-    <ol class="rec-list">
-      ${lista.map((r, i) => `
-        <li class="rec-card${r.no.length ? ' partial' : ''}">
-          <span class="rec-rank">${i + 1}</span>
-          <div class="rec-body">
-            <p class="rec-when">${diaCorto(r.p.fecha)} · ${esc(r.p.hora)}${t('time_suffix')} · ${esc(r.p.lugar)}</p>
-            <h3 class="film-title">${esc(r.p.titulo)}</h3>
-            <p class="film-meta">${esc(r.p.sinopsis)}</p>
-            <ul class="rec-why">
-              ${r.si.map(x => `<li class="ok">${esc(x)}</li>`).join('')}
-              ${r.no.map(x => `<li class="warn">${esc(x)}</li>`).join('')}
-              <li class="info">${esc(r.extra)}</li>
-            </ul>
-            <div class="rec-actions">
-              ${botonTicket(r.p)}
-              <a class="link-btn" href="#f-${esc(r.p.id)}">${t('rec_see')} ↓</a>
-            </div>
-          </div>
-        </li>`).join('')}
-    </ol>
+    <ol class="rec-list">${lista.map((r, i) => tarjeta(r.p, i, r.si, r.no, r.extra)).join('')}</ol>
     ${mas ? `<p class="rec-msg">${t('rec_more', { n: mas })}</p>` : ''}`;
+}
+
+// Pregunta al servicio de IA; si no hay, tarda o falla, se queda el motor local
+async function preguntarIA() {
+  if (!RECOMENDADOR_IA_URL || !consulta) return;
+  const pedido = { consulta, lang: LANG };
+  ia = { ...pedido, estado: 'pensando' };
+  renderRecomendaciones();
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);
+    const res = await fetch(RECOMENDADOR_IA_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+      body: JSON.stringify({ prompt: consulta, lang: LANG, hoy: HOY })
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(res.status);
+    const datos = await res.json();
+    if (ia && ia.consulta === pedido.consulta && ia.lang === pedido.lang) ia = { ...pedido, estado: 'ok', datos };
+  } catch (e) {
+    if (ia && ia.consulta === pedido.consulta && ia.lang === pedido.lang) ia = { ...pedido, estado: 'error' };
+  }
+  renderRecomendaciones();
 }
 
 function pedirRecomendacion(texto) {
@@ -156,6 +224,7 @@ function pedirRecomendacion(texto) {
   avisoVacio = !consulta;
   try { sessionStorage.setItem('lafita-rec', consulta); } catch (e) {}
   renderRecomendaciones();
+  preguntarIA();
 }
 
 document.getElementById('rec-form').addEventListener('submit', e => {
@@ -173,11 +242,16 @@ document.getElementById('rec-chips').addEventListener('click', e => {
   if (!normalizar(actual).includes(normalizar(b.dataset.q))) area.value = actual ? `${actual}, ${b.dataset.q}` : b.dataset.q;
   pedirRecomendacion(area.value);
 });
+document.addEventListener('toggle', e => {
+  const k = e.target.dataset && e.target.dataset.k;
+  if (k) e.target.open ? abiertos.add(k) : abiertos.delete(k);
+}, true);
+document.addEventListener('langchange', () => { if (ia && consulta) preguntarIA(); });
 
 (() => {
   let inicial = new URLSearchParams(location.search).get('q');
   if (inicial == null) try { inicial = sessionStorage.getItem('lafita-rec'); } catch (e) {}
-  if (inicial) { document.getElementById('rec-q').value = inicial; consulta = inicial.trim(); }
+  if (inicial) { document.getElementById('rec-q').value = inicial; consulta = inicial.trim(); preguntarIA(); }
 })();
 
 function render() {
@@ -202,6 +276,7 @@ function render() {
             <h3 class="film-title">${esc(p.titulo)}</h3>
             <p class="film-meta">${esc(p.sinopsis)}</p>
             ${p.enlaceExterno ? '' : lineaPlazas(p)}
+            ${fichaPelicula(p, 'prog-')}
           </div>
           ${botonTicket(p)}
         </article>`).join('')}

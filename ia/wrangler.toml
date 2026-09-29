@@ -1,0 +1,15 @@
+# Servicio de IA del recomendador (Cloudflare Workers, plan gratuito).
+# Instrucciones en el README del proyecto → "Recomendador con IA".
+name = "lafita-recomendador"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# De dónde lee el programa (movies.json publicado)
+PROGRAMA_URL = "https://lafita-muc.github.io/ticketing/movies.json"
+# Qué web puede llamar a este servicio (la dirección de la web de tickets)
+ORIGEN_PERMITIDO = "https://lafita-muc.github.io"
+
+# La clave NO va aquí: se guarda como secreto con
+#   npx wrangler secret put ANTHROPIC_API_KEY
