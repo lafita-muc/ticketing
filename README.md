@@ -6,6 +6,7 @@ Disponible en **alemán, español, inglés y portugués**.
 
 ## Qué hace
 
+- **Recomendador en la portada:** la persona escribe qué le apetece, en cualquiera de los 4 idiomas (*"el viernes por la noche, algo chileno"*, *"Doku am Wochenende, nicht zu lang"*, *"Saturday after 7pm"*…), o toca las ideas (días, franja horaria, tipo, país). La web entiende **día, hora, tipo (ficción / documental / cortos), género, país, duración** y también títulos o nombres de dirección, y recomienda hasta 3 funciones con **el porqué** (✓ lo que encaja, ! lo que no, y las plazas libres). Debajo sigue el programa completo con los tickets. Funciona sin servidor ni IA externa (`recomendador.js`).
 - **Programa por días** con todas las funciones y las **plazas libres** en directo.
 - **Kulturzentrum Luise y Werkstattkino** (30 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda hasta **10 minutos antes** de la función.
 - **Lista de espera:** cuando una función está completa, las nuevas reservas quedan **en espera** y la persona lo ve claramente (en pantalla y en el ticket). Si se liberan plazas, el equipo la confirma.
@@ -44,9 +45,12 @@ Cada película en `movies.json`:
   "hora": "18:30",
   "lugar": "Kulturzentrum Luise",
   "capacidad": 30,
-  "maxEntradasPorPersona": 4
+  "maxEntradasPorPersona": 4,
+  "generos": ["drama"]
 }
 ```
+
+`generos` es opcional y lo usa el recomendador. Claves posibles: `drama`, `comedia`, `thriller`, `terror`, `romance`, `musica`, `politica`, `familia`, `lgbtiq`, `juventud`. Si una película no tiene géneros, el recomendador lo dice ("no está marcada con ese género") en vez de inventarlo. El tipo (ficción/documental/cortos), los países y la duración los saca solo de la `sinopsis`.
 
 Si cambias la `capacidad` de una sala, cambia también `CAP()` en `firestore.rules` y vuelve a publicar las reglas en Firebase.
 
@@ -56,7 +60,8 @@ Los cambios se ven en la web 1–2 minutos después de guardarlos en GitHub.
 
 | Archivo | Para qué sirve |
 |---|---|
-| `index.html` | Programa |
+| `index.html` | Portada: recomendador + programa |
+| `recomendador.js` | Entiende el texto del recomendador y elige las películas |
 | `registro.html` | Formulario de reserva y ticket |
 | `gestionar.html` | Cambiar o cancelar una reserva |
 | `admin.html` | Panel del equipo |

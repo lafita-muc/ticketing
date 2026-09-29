@@ -21,9 +21,24 @@
   </div>
 </header>
 
-<section class="intro">
+<section class="rec" aria-labelledby="rec-title">
   <div class="inner">
-    <h1 data-i18n="intro_h1"></h1>
+    <p class="rec-kicker" data-i18n="rec_kicker"></p>
+    <h1 id="rec-title" data-i18n="rec_h1"></h1>
+    <p class="rec-lead" data-i18n="rec_lead"></p>
+    <form id="rec-form" class="rec-form" autocomplete="off">
+      <label for="rec-q" class="sr-only" data-i18n="rec_label"></label>
+      <textarea id="rec-q" rows="2" maxlength="300" data-i18n-ph="rec_ph"></textarea>
+      <button class="btn" type="submit" data-i18n="rec_btn"></button>
+    </form>
+    <div class="rec-ideas"><span class="rec-ideas-label" data-i18n="rec_try"></span><div id="rec-chips" class="chips"></div></div>
+    <div id="rec-out" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="intro" id="programa-tickets">
+  <div class="inner">
+    <h2 class="intro-title" data-i18n="program_h2"></h2>
     <p>Lateinamerikanische Filmtage München · 25.–29.11.2026</p>
     <div class="how"><span data-i18n="step1"></span><span data-i18n="step2"></span><span data-i18n="step3"></span></div>
     <p class="home-manage" data-i18n="home_manage"></p>
@@ -58,6 +73,7 @@
 <script src="firebase-config.js"></script>
 <script src="i18n.js"></script>
 <script src="plazas.js"></script>
+<script src="recomendador.js"></script>
 <script>
 let peliculas = null;
 let ocupadas = {};     // plazas ocupadas por función (en directo desde Firebase)
@@ -72,7 +88,101 @@ function lineaPlazas(p) {
   return `<p class="seats-line${n <= 0 ? ' full' : n <= 5 ? ' low' : ''}">${textoPlazas(n)}</p>`;
 }
 
+function botonTicket(p) {
+  return p.enlaceExterno
+    ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
+    : `<a class="btn${libresDe(p) <= 0 ? ' waitlist' : ''}" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${libresDe(p) <= 0 ? t('btn_waitlist') : t('btn_reserve')}</a>`;
+}
+
+// ---------- Recomendador ----------
+const HOY = new Date().toISOString().slice(0, 10);
+let consulta = '';     // último texto recomendado ('' = nada todavía)
+let avisoVacio = false;
+
+function renderChips() {
+  const box = document.getElementById('rec-chips');
+  if (!peliculas) { box.innerHTML = ''; return; }
+  const fechas = [...new Set(peliculas.filter(p => p.fecha >= HOY).map(p => p.fecha))];
+  const chips = [
+    ...fechas.map(f => [diaCorto(f), t('days_long')[new Date(f + 'T00:00:00').getDay()]]),
+    ...t('chips_time').map(x => [x, x]),
+    ...t('chips_type').map(x => [x, x]),
+    ...paisesDelPrograma(peliculas).map(x => [nombrePais(x), nombrePais(x)])
+  ];
+  box.innerHTML = chips.map(([label, texto]) =>
+    `<button type="button" class="chip" data-q="${esc(texto)}">${esc(label)}</button>`).join('');
+}
+
+function renderRecomendaciones() {
+  const out = document.getElementById('rec-out');
+  if (avisoVacio) { out.innerHTML = `<p class="rec-msg">${t('rec_empty')}</p>`; return; }
+  if (!consulta || !peliculas) { out.innerHTML = ''; return; }
+
+  const c = interpretar(consulta, peliculas, HOY);
+  if (c.vacio) { out.innerHTML = `<p class="rec-msg">${t('rec_none_understood')}</p>`; return; }
+
+  const { lista, exacto, mas } = recomendar(c, peliculas, libresDe, HOY);
+  const entendido = `<p class="rec-understood"><span>${t('rec_understood')}</span> ${resumenCriterios(c).map(x => `<span class="tagx">${esc(x)}</span>`).join('')}</p>`;
+  if (!lista.length) { out.innerHTML = entendido + `<p class="rec-msg">${t('rec_nomatch')}</p>`; return; }
+
+  out.innerHTML = entendido + `
+    <h2 class="rec-results-title">${t('rec_results')}</h2>
+    ${exacto ? '' : `<p class="rec-msg">${t('rec_partial')}</p>`}
+    <ol class="rec-list">
+      ${lista.map((r, i) => `
+        <li class="rec-card${r.no.length ? ' partial' : ''}">
+          <span class="rec-rank">${i + 1}</span>
+          <div class="rec-body">
+            <p class="rec-when">${diaCorto(r.p.fecha)} · ${esc(r.p.hora)}${t('time_suffix')} · ${esc(r.p.lugar)}</p>
+            <h3 class="film-title">${esc(r.p.titulo)}</h3>
+            <p class="film-meta">${esc(r.p.sinopsis)}</p>
+            <ul class="rec-why">
+              ${r.si.map(x => `<li class="ok">${esc(x)}</li>`).join('')}
+              ${r.no.map(x => `<li class="warn">${esc(x)}</li>`).join('')}
+              <li class="info">${esc(r.extra)}</li>
+            </ul>
+            <div class="rec-actions">
+              ${botonTicket(r.p)}
+              <a class="link-btn" href="#f-${esc(r.p.id)}">${t('rec_see')} ↓</a>
+            </div>
+          </div>
+        </li>`).join('')}
+    </ol>
+    ${mas ? `<p class="rec-msg">${t('rec_more', { n: mas })}</p>` : ''}`;
+}
+
+function pedirRecomendacion(texto) {
+  consulta = texto.trim();
+  avisoVacio = !consulta;
+  try { sessionStorage.setItem('lafita-rec', consulta); } catch (e) {}
+  renderRecomendaciones();
+}
+
+document.getElementById('rec-form').addEventListener('submit', e => {
+  e.preventDefault();
+  pedirRecomendacion(document.getElementById('rec-q').value);
+});
+document.getElementById('rec-q').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('rec-form').requestSubmit(); }
+});
+document.getElementById('rec-chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  const area = document.getElementById('rec-q');
+  const actual = area.value.trim();
+  if (!normalizar(actual).includes(normalizar(b.dataset.q))) area.value = actual ? `${actual}, ${b.dataset.q}` : b.dataset.q;
+  pedirRecomendacion(area.value);
+});
+
+(() => {
+  let inicial = new URLSearchParams(location.search).get('q');
+  if (inicial == null) try { inicial = sessionStorage.getItem('lafita-rec'); } catch (e) {}
+  if (inicial) { document.getElementById('rec-q').value = inicial; consulta = inicial.trim(); }
+})();
+
 function render() {
+  renderChips();
+  renderRecomendaciones();
   const cont = document.getElementById('programa');
   if (!peliculas) return;
   if (!peliculas.length) { cont.innerHTML = `<p>${t('no_films')}</p>`; return; }
@@ -85,7 +195,7 @@ function render() {
     <section class="day">
       <h2 class="day-title">${diaCorto(fecha)}</h2>
       ${lista.map(p => `
-        <article class="screening">
+        <article class="screening" id="f-${esc(p.id)}">
           <div class="when"><span class="time">${esc(p.hora)}</span><span class="venue">${esc(p.lugar)}</span></div>
           <div>
             ${p.poster ? `<img class="poster" src="${esc(p.poster)}" alt="">` : ''}
@@ -93,9 +203,7 @@ function render() {
             <p class="film-meta">${esc(p.sinopsis)}</p>
             ${p.enlaceExterno ? '' : lineaPlazas(p)}
           </div>
-          ${p.enlaceExterno
-            ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
-            : `<a class="btn${libresDe(p) <= 0 ? ' waitlist' : ''}" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${libresDe(p) <= 0 ? t('btn_waitlist') : t('btn_reserve')}</a>`}
+          ${botonTicket(p)}
         </article>`).join('')}
     </section>`).join('');
 }
