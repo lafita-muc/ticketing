@@ -429,9 +429,3 @@ function resumenCriterios(c) {
   c.palabras.forEach(w => out.push('«' + w + '»'));
   return [...new Set(out)];
 }
-
-// Países de América Latina que hay en el programa (para las sugerencias)
-function paisesDelPrograma(peliculas) {
-  const set = new Set(peliculas.flatMap(p => datosPelicula(p).paises.filter(x => x.zona === 'sur' || x.zona === 'centro').map(x => x.de)));
-  return PAISES.filter(p => set.has(p.de));
-}

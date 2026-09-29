@@ -488,15 +488,7 @@ td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
 .rec-form textarea:focus { outline: none; box-shadow: inset 0 0 0 3px var(--green); }
 .rec-form .btn { background: var(--green); border-color: var(--green); color: var(--ink); }
 .rec-form .btn:hover { background: var(--lime); border-color: var(--lime); }
-.rec-ideas { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: baseline; margin-top: 14px; }
-.rec-ideas-label { font-size: 0.85rem; font-weight: 600; color: #bdbdbd; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  font-family: var(--font-body); font-size: 0.85rem; font-weight: 600;
-  background: transparent; color: var(--paper);
-  border: 1px solid #6d6d6d; padding: 4px 10px; cursor: pointer;
-}
-.chip:hover { border-color: var(--green); color: var(--green); }
+.rec-hint { margin: 10px 0 0; font-size: 0.9rem; color: #bdbdbd; }
 #rec-out:not(:empty) { margin-top: 24px; }
 .rec-msg { margin: 10px 0 0; color: #d6d6d6; font-size: 0.95rem; }
 .rec-understood { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: 0.85rem; color: #bdbdbd; }
