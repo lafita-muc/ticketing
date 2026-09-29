@@ -31,7 +31,7 @@
       <textarea id="rec-q" rows="2" maxlength="300" data-i18n-ph="rec_ph"></textarea>
       <button class="btn" type="submit" data-i18n="rec_btn"></button>
     </form>
-    <div class="rec-ideas"><span class="rec-ideas-label" data-i18n="rec_try"></span><div id="rec-chips" class="chips"></div></div>
+    <p class="rec-hint" data-i18n="rec_hint"></p>
     <div id="rec-out" aria-live="polite"></div>
   </div>
 </section>
@@ -100,21 +100,6 @@ let consulta = '';     // último texto recomendado ('' = nada todavía)
 let avisoVacio = false;
 let ia = null;         // respuesta del servicio de IA: { consulta, lang, estado: 'pensando'|'ok'|'error', datos }
 const abiertos = new Set();   // fichas "Trama y reparto" abiertas (se mantienen al refrescar plazas)
-
-function renderChips() {
-  const box = document.getElementById('rec-chips');
-  if (!peliculas) { box.innerHTML = ''; return; }
-  const fechas = [...new Set(peliculas.filter(p => p.fecha >= HOY).map(p => p.fecha))];
-  const chips = [
-    ...t('chips_mood').map(x => [x, x]),
-    ...fechas.map(f => [diaCorto(f), t('days_long')[new Date(f + 'T00:00:00').getDay()]]),
-    ...t('chips_time').map(x => [x, x]),
-    ...t('chips_type').map(x => [x, x]),
-    ...paisesDelPrograma(peliculas).map(x => [nombrePais(x), nombrePais(x)])
-  ];
-  box.innerHTML = chips.map(([label, texto]) =>
-    `<button type="button" class="chip" data-q="${esc(texto)}">${esc(label)}</button>`).join('');
-}
 
 // Trama, dirección y reparto (plegable)
 function fichaPelicula(p, clave) {
@@ -234,14 +219,6 @@ document.getElementById('rec-form').addEventListener('submit', e => {
 document.getElementById('rec-q').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('rec-form').requestSubmit(); }
 });
-document.getElementById('rec-chips').addEventListener('click', e => {
-  const b = e.target.closest('.chip');
-  if (!b) return;
-  const area = document.getElementById('rec-q');
-  const actual = area.value.trim();
-  if (!normalizar(actual).includes(normalizar(b.dataset.q))) area.value = actual ? `${actual}, ${b.dataset.q}` : b.dataset.q;
-  pedirRecomendacion(area.value);
-});
 document.addEventListener('toggle', e => {
   const k = e.target.dataset && e.target.dataset.k;
   if (k) e.target.open ? abiertos.add(k) : abiertos.delete(k);
@@ -255,7 +232,6 @@ document.addEventListener('langchange', () => { if (ia && consulta) preguntarIA(
 })();
 
 function render() {
-  renderChips();
   renderRecomendaciones();
   const cont = document.getElementById('programa');
   if (!peliculas) return;
