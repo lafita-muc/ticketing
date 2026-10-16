@@ -39,16 +39,16 @@ Cada película en `movies.json`:
 
 ```json
 {
-  "id": "el-deshielo-1125",
-  "titulo": "EL DESHIELO",
-  "sinopsis": "Spielfilm · Chile, USA, Spanien, Mexiko 2026 · 108 min · Regie: Manuela Martelli",
+  "id": "un-cabo-suelto-1125",
+  "titulo": "UN CABO SUELTO",
+  "sinopsis": "Spielfilm · Uruguay, Argentinien, Spanien 2025 · 95 min · Regie: Daniel Hendler",
   "poster": "",
   "fecha": "2026-11-25",
-  "hora": "18:30",
+  "hora": "19:00",
   "lugar": "Kulturzentrum Luise",
   "capacidad": 30,
   "maxEntradasPorPersona": 4,
-  "generos": ["drama"]
+  "generos": ["comedia", "thriller", "romance"]
 }
 ```
 
