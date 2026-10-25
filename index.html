@@ -51,6 +51,10 @@
         <h2 data-i18n="other_title"></h2>
         <p data-i18n="other_text"></p>
       </div>
+      <div>
+        <h2 data-i18n="opening_title"></h2>
+        <p data-i18n="opening_text"></p>
+      </div>
     </div>
   </div>
 </section>
@@ -89,6 +93,7 @@ function lineaPlazas(p) {
 }
 
 function botonTicket(p) {
+  if (p.soloTaquilla) return `<span class="boxoffice-only">${t('btn_boxoffice')}</span>`;
   return p.enlaceExterno
     ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
     : `<a class="btn${libresDe(p) <= 0 ? ' waitlist' : ''}" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${libresDe(p) <= 0 ? t('btn_waitlist') : t('btn_reserve')}</a>`;
@@ -141,6 +146,7 @@ function tarjeta(p, i, si, no, extra) {
 function infoPractica(p) {
   const n = libresDe(p);
   if (p.enlaceExterno) return t('r_online');
+  if (p.soloTaquilla) return t('r_boxoffice');
   if (n <= 0) return t('r_full');
   return n === 1 ? t('r_seats_one') : t('r_seats', { n });
 }
@@ -251,7 +257,7 @@ function render() {
             ${p.poster ? `<img class="poster" src="${esc(p.poster)}" alt="">` : ''}
             <h3 class="film-title">${esc(p.titulo)}</h3>
             <p class="film-meta">${esc(p.sinopsis)}</p>
-            ${p.enlaceExterno ? '' : lineaPlazas(p)}
+            ${p.enlaceExterno || p.soloTaquilla ? '' : lineaPlazas(p)}
             ${fichaPelicula(p, 'prog-')}
           </div>
           ${botonTicket(p)}

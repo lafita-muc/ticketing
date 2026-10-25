@@ -13,7 +13,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Plazas por sala. Si cambias "capacidad" en movies.json, cambia también este número.
-    function CAP() { return 30; }
+    function CAP() { return 35; }
 
     function ins(c) { return /databases/$(database)/documents/inscripciones/$(c); }
     function fun(p) { return /databases/$(database)/documents/funciones/$(p); }
@@ -24,6 +24,10 @@ service cloud.firestore {
     }
 
     function esEquipo() { return request.auth != null; }
+
+    // Funciones SIN reserva online (solo taquilla el mismo día), como la apertura.
+    // Deben coincidir con "soloTaquilla": true en movies.json.
+    function soloTaquilla(p) { return p in ['un-cabo-suelto-1125']; }
 
     match /inscripciones/{clave} {
 
@@ -48,6 +52,7 @@ service cloud.firestore {
       // Reservar (público): "activa" si hay plazas (sube el contador), o "espera"
       allow create: if clave.size() == 12
         && valida(request.resource.data)
+        && !soloTaquilla(request.resource.data.peliculaId)
         && !('asistencia' in request.resource.data)
         && request.resource.data.estado in ['activa', 'espera']
         && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data);
