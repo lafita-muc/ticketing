@@ -1,7 +1,7 @@
 // ============================================================
 // Plazas por función
 // ============================================================
-// Cada sala tiene 30 plazas (se puede cambiar por película con
+// Cada sala tiene 35 plazas (se puede cambiar por película con
 // "capacidad" en movies.json; si lo cambias, cambia también CAP() en
 // firestore.rules).
 //
@@ -14,7 +14,7 @@
 // sin poder ver los datos de las reservas.
 // ============================================================
 
-const CAPACIDAD_POR_DEFECTO = 30;
+const CAPACIDAD_POR_DEFECTO = 35;
 
 function capacidadDe(pelicula) {
   return (pelicula && pelicula.capacidad) || CAPACIDAD_POR_DEFECTO;

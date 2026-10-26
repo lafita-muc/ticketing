@@ -10,13 +10,14 @@ Disponible en **alemán, español, inglés y portugués**.
   - **Sin IA (siempre funciona, gratis):** `recomendador.js` entiende día, hora, tipo, género, país, duración, **temas y tono** (misterio, ternura, humor negro, migración…), **referencias** a cineastas y películas conocidas (Lynch, Almodóvar, Haneke, *Parásitos*…), nombres del **reparto** y palabras de la **trama**.
   - **Con IA (opcional):** si se configura el servicio de `ia/` (ver abajo), entiende cualquier frase y escribe razones a medida. Si el servicio no responde, la web usa sola el recomendador sin IA.
 - **Programa por días** con todas las funciones y las **plazas libres** en directo.
-- **Kulturzentrum Luise y Werkstattkino** (30 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda hasta **10 minutos antes** de la función.
+- **Werkstattkino** (35 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda hasta **10 minutos antes** de la función.
 - **Lista de espera:** cuando una función está completa, las nuevas reservas quedan **en espera** y la persona lo ve claramente (en pantalla y en el ticket). Si se liberan plazas, el equipo la confirma.
+- **Apertura (Kulturzentrum Luise, 25.11.):** sin reserva online. La web muestra «Solo en taquilla» y las entradas se compran ese día en la caja. Se marca con `"soloTaquilla": true` en `movies.json` (y el mismo ID en `soloTaquilla()` de `firestore.rules`).
 - **Gasteig HP8:** estas funciones no usan el formulario; el botón **Tickets ↗** lleva a la venta online.
 - **Ticket con código y arte:** código de entrada (ej. `LAF-7K3QM`), un nombre fácil de decir ("Jaguar Turquesa") y una imagen única generada a partir del código.
 - **Cambiar o cancelar:** cada reserva tiene una **clave de gestión** privada (`XXXX-XXXX-XXXX`) para corregir los datos o cancelar. Una vez que la taquilla la marca (vino / no vino), ya no se puede cambiar.
 - **Panel del equipo** (`admin.html`, con usuario y contraseña):
-  - **ocupación de cada función**: 30 casillas con reservado / vino / libre, y cuántas personas hay en espera; tocando una función se filtra la lista;
+  - **ocupación de cada función**: 35 casillas con reservado / vino / libre, y cuántas personas hay en espera; tocando una función se filtra la lista;
   - por reserva: **✓ Vino**, **✗ No vino** (libera las plazas), **Cancelar**, **Confirmar** (desde la lista de espera), **Deshacer** y **Borrar**;
   - búsqueda por código, nombre, email o animal; totales; exportar a CSV / Excel.
 
@@ -32,6 +33,7 @@ Disponible en **alemán, español, inglés y portugués**.
 |---|---|
 | Películas, fechas, horas, salas, plazas (`capacidad`), trama y reparto | `movies.json` |
 | Funciones con venta externa | campo `enlaceExterno` en `movies.json` |
+| Funciones solo en taquilla (sin reserva) | campo `"soloTaquilla": true` en `movies.json` + ID en `soloTaquilla()` de `firestore.rules` |
 | Textos en los 4 idiomas | `i18n.js` |
 | Colores y diseño | `style.css` |
 
@@ -46,7 +48,7 @@ Cada película en `movies.json`:
   "fecha": "2026-11-25",
   "hora": "19:00",
   "lugar": "Kulturzentrum Luise",
-  "capacidad": 30,
+  "capacidad": 35,
   "maxEntradasPorPersona": 4,
   "generos": ["comedia", "thriller", "romance"]
 }

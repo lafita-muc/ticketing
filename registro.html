@@ -181,6 +181,11 @@ async function init() {
     const peliculas = await (await fetch('movies.json', { cache: 'no-store' })).json();
     pelicula = peliculas.find(p => p.id === movieId);
     if (!pelicula) { error(t('err_notfound')); return; }
+    if (pelicula.soloTaquilla) {
+      // Sin reserva online: las entradas se compran el mismo día en la taquilla
+      error(t('err_boxoffice'));
+      return;
+    }
     if (pelicula.enlaceExterno) {
       // Esta función no usa el formulario: las entradas se venden en otra web
       location.replace(pelicula.enlaceExterno);

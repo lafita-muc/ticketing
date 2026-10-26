@@ -389,10 +389,11 @@ function evaluar(p, c, libres) {
   // Información práctica (no suma puntos, solo desempata)
   let extra;
   if (p.enlaceExterno) extra = t('r_online');
+  else if (p.soloTaquilla) extra = t('r_boxoffice');
   else if (libres <= 0) extra = t('r_full');
   else extra = libres === 1 ? t('r_seats_one') : t('r_seats', { n: libres });
 
-  return { p, puntos, total, si, no, extra, completo: !p.enlaceExterno && libres <= 0 };
+  return { p, puntos, total, si, no, extra, completo: !p.enlaceExterno && !p.soloTaquilla && libres <= 0 };
 }
 
 // Devuelve { lista, exacto } con las mejores funciones para los criterios

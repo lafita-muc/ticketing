@@ -327,7 +327,7 @@ document.addEventListener('langchange', () => {
   render();
 });
 fetch('movies.json', { cache: 'no-store' }).then(r => r.json()).then(list => {
-  peliculas = list.filter(p => !p.enlaceExterno).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  peliculas = list.filter(p => !p.enlaceExterno && !p.soloTaquilla).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
   render();
   sincronizarContadores();
 }).catch(() => {});
