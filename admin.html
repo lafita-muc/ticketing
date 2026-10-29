@@ -204,6 +204,8 @@ $('tabla-body').addEventListener('click', e => {
     case 'confirmar':return aplicar(r, { estado: 'activa' });
     case 'cancelar': if (confirm(t('confirm_cancel_staff'))) aplicar(r, { estado: 'cancelada' }); return;
     case 'borrar':   if (confirm(t('confirm_delete'))) aplicar(r, null, true); return;
+    // Invitado especial: solo una marca para el equipo (no cambia plazas ni lo ve el público)
+    case 'invitado': return aplicar(r, { invitado: r.invitado ? del : true });
   }
 });
 
@@ -211,9 +213,9 @@ $('tabla-body').addEventListener('click', e => {
 function actualizarFiltro() {
   const select = $('filtro-pelicula');
   const previo = select.value;
-  select.innerHTML = `<option value="">${t('all_films')}</option>` +
+  select.innerHTML = `<option value="">${t('all_films')}</option><option value="__invitados">${t('only_guests')}</option>` +
     peliculas.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(diaCorto(p.fecha))} ${escapeHtml(p.hora)} · ${escapeHtml(p.titulo)}</option>`).join('');
-  select.value = peliculas.some(p => p.id === previo) ? previo : '';
+  select.value = previo === '__invitados' || peliculas.some(p => p.id === previo) ? previo : '';
 }
 
 function renderAsientos() {
@@ -237,10 +239,11 @@ $('seat-grid').addEventListener('click', e => {
 });
 
 function filtradas() {
-  const pid = $('filtro-pelicula').value;
+  const filtro = $('filtro-pelicula').value;
+  const soloInvitados = filtro === '__invitados', pid = soloInvitados ? '' : filtro;
   const q = normalizar($('buscar').value);
-  return todas.filter(r => (!pid || r.peliculaId === pid) &&
-    (!q || normalizar([r.codigo, r.nombre, r.email, r.nombreArte].join(' ')).includes(q)));
+  return todas.filter(r => (!pid || r.peliculaId === pid) && (!soloInvitados || r.invitado) &&
+    (!q || normalizar([r.codigo, r.nombre, r.email, r.nombreArte, r.invitado ? t('guest_badge') : ''].join(' ')).includes(q)));
 }
 
 function estadoHtml(r) {
@@ -257,6 +260,7 @@ function accionesHtml(r) {
   if (r.estado === 'activa' && !r.asistencia) h += b('vino', t('act_came'), 'ok') + b('no_vino', t('act_noshow'), 'no') + b('cancelar', t('act_cancel'));
   else if (r.estado === 'activa') h += b('deshacer', t('act_undo'));
   else if (r.estado === 'espera') h += b('confirmar', t('act_promote'), 'ok') + b('cancelar', t('act_cancel'));
+  if (r.estado !== 'cancelada') h += b('invitado', r.invitado ? t('btn_unguest') : `★ ${t('btn_guest')}`, 'guest');
   h += b('borrar', t('act_delete'), 'danger');
   return `<div class="acts">${h}</div>`;
 }
@@ -266,12 +270,12 @@ function render() {
   renderAsientos();
   const datos = filtradas();
   $('tabla-body').innerHTML = datos.map(r => `
-    <tr class="${r.estado === 'cancelada' ? 'is-cancelled' : ''}${r.asistencia === 'no_vino' ? ' is-noshow' : ''}">
+    <tr class="${r.estado === 'cancelada' ? 'is-cancelled' : ''}${r.asistencia === 'no_vino' ? ' is-noshow' : ''}${r.invitado ? ' is-guest' : ''}">
       <td>${estadoHtml(r)}</td>
       <td>${accionesHtml(r)}</td>
       <td><div class="code-cell"><span class="mini-arte">${LafitaTicket.svgArte(r.codigo || r.id, 60)}</span>
         <span><span class="codigo">${escapeHtml(r.codigo || r.id)}</span><br><span class="nombre-arte">${escapeHtml(r.nombreArte || LafitaTicket.nombreArte(r.codigo || r.id))}</span></span></div></td>
-      <td>${escapeHtml(r.nombre)}</td>
+      <td>${escapeHtml(r.nombre)}${r.invitado ? ` <span class="pill guest">★ ${t('guest_badge')}</span>` : ''}</td>
       <td class="num">${r.personas || 0}</td>
       <td>${escapeHtml(r.peliculaTitulo)}<div class="sub">${r.fecha ? diaCorto(r.fecha) : ''} ${escapeHtml(r.hora)}</div></td>
       <td>${escapeHtml(r.email)}</td>
@@ -285,7 +289,8 @@ function render() {
     <div class="stat-box"><div class="num">${suma(activas)}</div><div class="label">${t('stat_people')}</div></div>
     <div class="stat-box"><div class="num">${suma(activas.filter(r => r.asistencia === 'vino'))}</div><div class="label">${t('stat_came')}</div></div>
     <div class="stat-box"><div class="num">${suma(datos.filter(r => r.estado === 'espera'))}</div><div class="label">${t('stat_waitlist')}</div></div>
-    <div class="stat-box"><div class="num">${datos.filter(r => r.estado === 'cancelada').length}</div><div class="label">${t('stat_cancelled')}</div></div>`;
+    <div class="stat-box"><div class="num">${datos.filter(r => r.estado === 'cancelada').length}</div><div class="label">${t('stat_cancelled')}</div></div>
+    <div class="stat-box"><div class="num">${suma(activas.filter(r => r.invitado))}</div><div class="label">${t('stat_guests')}</div></div>`;
 }
 
 $('filtro-pelicula').addEventListener('change', render);
@@ -293,9 +298,9 @@ $('buscar').addEventListener('input', render);
 
 // ---------- CSV ----------
 $('btn-csv').addEventListener('click', () => {
-  const filas = [['Codigo', 'Estado', 'Asistencia', 'Nombre arte', 'Nombre', 'Email', 'Personas', 'Pelicula', 'Fecha funcion', 'Hora', 'Enviado']];
+  const filas = [['Codigo', 'Estado', 'Asistencia', 'Invitado', 'Nombre arte', 'Nombre', 'Email', 'Personas', 'Pelicula', 'Fecha funcion', 'Hora', 'Enviado']];
   filtradas().forEach(r => filas.push([
-    r.codigo || r.id, r.estado || 'activa', r.asistencia || '', r.nombreArte || '', r.nombre || '', r.email || '',
+    r.codigo || r.id, r.estado || 'activa', r.asistencia || '', r.invitado ? 'si' : '', r.nombreArte || '', r.nombre || '', r.email || '',
     r.personas || 0, r.peliculaTitulo || '', r.fecha || '', r.hora || '', formatearTimestamp(r.creadoEn)
   ]));
   const csv = filas.map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');

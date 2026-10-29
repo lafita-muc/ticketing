@@ -56,6 +56,7 @@
         <p data-i18n="opening_text"></p>
       </div>
     </div>
+    <p class="help-line" data-i18n="help_text"></p>
   </div>
 </section>
 
@@ -89,7 +90,12 @@ function esc(s) {
 function libresDe(p) { return capacidadDe(p) - (ocupadas[p.id] || 0); }
 function lineaPlazas(p) {
   const n = libresDe(p);
-  return `<p class="seats-line${n <= 0 ? ' full' : n <= 5 ? ' low' : ''}">${textoPlazas(n)}</p>`;
+  let h = `<p class="seats-line${n <= 0 ? ' full' : n <= 5 ? ' low' : ''}">${textoPlazas(n)}</p>`;
+  // Agotado: puede haber sitio extra en la taquilla
+  if (n <= 0) h += `<p class="seats-extra">${t('soldout_hint')}</p>`;
+  // Apertura: hay más plazas que reservas (el resto, en taquilla)
+  if (p.aforo > capacidadDe(p)) h += `<p class="seats-extra">${t('opening_extra', { n: p.aforo })}</p>`;
+  return h;
 }
 
 function botonTicket(p) {

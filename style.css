@@ -552,3 +552,14 @@ td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
 .rec-card .film-more { margin-top: 12px; }
 .rec-thinking::before { content: "… "; }
 .rec-ai-note { font-size: 0.82rem; }
+
+/* ---------- Ayuda técnica, agotado y apertura ---------- */
+.help-line { margin: 18px 0 0; padding: 10px 14px; border-left: 5px solid var(--teal); background: #e6f4f7; font-size: 0.92rem; color: var(--ink) !important; max-width: none !important; }
+.help-line a { font-weight: 600; color: var(--ink); }
+.ticket-wrap .help-line { text-align: left; }
+.seats-extra { margin: 2px 0 0; font-size: 0.85rem; color: var(--grey); }
+
+/* ---------- Invitados (solo panel del equipo) ---------- */
+.pill.guest { background: var(--lime); color: var(--ink); }
+.act.guest { border-style: dashed; }
+tr.is-guest td:first-child { box-shadow: inset 4px 0 0 var(--lime); }

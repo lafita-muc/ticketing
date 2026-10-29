@@ -4,7 +4,8 @@
 // - El público puede reservar mientras queden plazas (si no, queda en lista de espera).
 // - Cada persona puede cambiar o cancelar SU reserva con su clave de gestión.
 // - El equipo (con login) puede verlo todo y marcar asistencia, cancelar,
-//   confirmar desde la lista de espera y borrar.
+//   confirmar desde la lista de espera, marcar invitados y borrar.
+// - El campo "invitado" solo lo pone el equipo y la web pública no lo muestra.
 // - "funciones" guarda cuántas plazas ocupadas tiene cada función, para que la
 //   web pública sepa cuántas quedan sin ver los datos de nadie.
 
@@ -12,8 +13,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Plazas por sala. Si cambias "capacidad" en movies.json, cambia también este número.
-    function CAP() { return 35; }
+    // Plazas que se pueden reservar por función. Deben coincidir con "capacidad"
+    // en movies.json: la apertura tiene 130 reservas (aforo 190, el resto en
+    // taquilla); las demás funciones, 35.
+    function CAP(p) { return p == 'un-cabo-suelto-1125' ? 130 : 35; }
 
     function ins(c) { return /databases/$(database)/documents/inscripciones/$(c); }
     function fun(p) { return /databases/$(database)/documents/funciones/$(p); }
@@ -25,9 +28,9 @@ service cloud.firestore {
 
     function esEquipo() { return request.auth != null; }
 
-    // Funciones SIN reserva online (solo taquilla el mismo día), como la apertura.
-    // Deben coincidir con "soloTaquilla": true en movies.json.
-    function soloTaquilla(p) { return p in ['un-cabo-suelto-1125']; }
+    // Funciones SIN reserva online (solo taquilla el mismo día).
+    // Deben coincidir con "soloTaquilla": true en movies.json. Ahora no hay ninguna.
+    function soloTaquilla(p) { return p in []; }
 
     match /inscripciones/{clave} {
 
@@ -54,6 +57,7 @@ service cloud.firestore {
         && valida(request.resource.data)
         && !soloTaquilla(request.resource.data.peliculaId)
         && !('asistencia' in request.resource.data)
+        && !('invitado' in request.resource.data)
         && request.resource.data.estado in ['activa', 'espera']
         && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data);
 
@@ -91,7 +95,7 @@ service cloud.firestore {
       allow create, update: if request.resource.data.keys().hasOnly(['ocupadas', 'ultima'])
         && request.resource.data.ocupadas is int
         && request.resource.data.ocupadas >= 0
-        && request.resource.data.ocupadas <= CAP()
+        && request.resource.data.ocupadas <= CAP(pid)
         && request.resource.data.ultima is string
         && existsAfter(ins(request.resource.data.ultima))
         && getAfter(ins(request.resource.data.ultima)).data.peliculaId == pid

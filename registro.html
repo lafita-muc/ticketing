@@ -61,6 +61,7 @@
           </div>
         </form>
         <div id="error"></div>
+        <p class="help-line" data-i18n="help_text"></p>
       </div>
     </div>
   </div>
@@ -122,7 +123,8 @@ function pintarPlazas() {
   const n = libres();
   nota.hidden = false;
   nota.classList.toggle('full', n <= 0);
-  nota.innerHTML = n <= 0 ? t('form_full_note') : t('form_seats_note', { n });
+  nota.innerHTML = (n <= 0 ? t('form_full_note') : t('form_seats_note', { n }))
+    + (pelicula.aforo > capacidadDe(pelicula) ? `<br>${t('opening_extra', { n: pelicula.aforo })}` : '');
   const btn = document.getElementById('btn-enviar');
   if (btn.textContent !== t('sending')) btn.textContent = textoBoton();
 }

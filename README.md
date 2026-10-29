@@ -10,22 +10,24 @@ Disponible en **alemán, español, inglés y portugués**.
   - **Sin IA (siempre funciona, gratis):** `recomendador.js` entiende día, hora, tipo, género, país, duración, **temas y tono** (misterio, ternura, humor negro, migración…), **referencias** a cineastas y películas conocidas (Lynch, Almodóvar, Haneke, *Parásitos*…), nombres del **reparto** y palabras de la **trama**.
   - **Con IA (opcional):** si se configura el servicio de `ia/` (ver abajo), entiende cualquier frase y escribe razones a medida. Si el servicio no responde, la web usa sola el recomendador sin IA.
 - **Programa por días** con todas las funciones y las **plazas libres** en directo.
-- **Werkstattkino** (35 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda hasta **10 minutos antes** de la función.
-- **Lista de espera:** cuando una función está completa, las nuevas reservas quedan **en espera** y la persona lo ve claramente (en pantalla y en el ticket). Si se liberan plazas, el equipo la confirma.
-- **Apertura (Kulturzentrum Luise, 25.11.):** sin reserva online. La web muestra «Solo en taquilla» y las entradas se compran ese día en la caja. Se marca con `"soloTaquilla": true` en `movies.json` (y el mismo ID en `soloTaquilla()` de `firestore.rules`).
-- **Gasteig HP8:** estas funciones no usan el formulario; el botón **Tickets ↗** lleva a la venta online.
+- **Werkstattkino** (35 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda **solo hasta 15 minutos antes** de la función.
+- **Agotado / lista de espera:** cuando una función está completa se muestra **Agotado** y se avisa de que pueden venir igualmente a la taquilla, porque puede haber sitios extra. También pueden apuntarse a la **lista de espera**; si se liberan plazas, el equipo la confirma.
+- **Apertura (Kulturzentrum Luise, 25.11.):** aforo de **190**, pero solo se dan **130 reservas** online (`"capacidad": 130, "aforo": 190` en `movies.json` y `CAP()` en `firestore.rules`). La web avisa de que hay más plazas en la taquilla el mismo día.
+- **Ayuda técnica:** en la portada, el formulario y la página de gestión sale el correo **ticket@lafita.de** (se cambia en `CONTACTO`, en `i18n.js`).
+- **Gasteig HP8:** estas funciones no usan el formulario; el botón **München Ticket ↗** lleva a la venta de München Ticket.
 - **Ticket con código y arte:** código de entrada (ej. `LAF-7K3QM`), un nombre fácil de decir ("Jaguar Turquesa") y una imagen única generada a partir del código.
 - **Cambiar o cancelar:** cada reserva tiene una **clave de gestión** privada (`XXXX-XXXX-XXXX`) para corregir los datos o cancelar. Una vez que la taquilla la marca (vino / no vino), ya no se puede cambiar.
 - **Panel del equipo** (`admin.html`, con usuario y contraseña):
   - **ocupación de cada función**: 35 casillas con reservado / vino / libre, y cuántas personas hay en espera; tocando una función se filtra la lista;
   - por reserva: **✓ Vino**, **✗ No vino** (libera las plazas), **Cancelar**, **Confirmar** (desde la lista de espera), **Deshacer** y **Borrar**;
+  - **★ Invitado:** marca una reserva como invitado especial (se registran como reservas normales). Solo lo ve el equipo; hay filtro «Solo invitados» y contador;
   - búsqueda por código, nombre, email o animal; totales; exportar a CSV / Excel.
 
 ## En la taquilla
 
 1. La persona enseña su ticket. Buscar su código o su animal en el panel.
 2. Comprobar que la imagen coincide y marcar **✓ Vino** (y cobrar en efectivo).
-3. **10 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
+3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
 
 ## Actualizar la web
 

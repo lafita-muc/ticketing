@@ -129,7 +129,7 @@ const LafitaTicket = (() => {
     const cuando = fecha && typeof diaCorto === 'function' ? diaCorto(fecha) : (fechaTexto || '');
     const sufijo = tr('time_suffix', ' Uhr');
     const gente = personas == 1 ? tr('person', 'Person') : tr('persons', 'Personen');
-    const nota = tr('ticket_note', 'Reserviert bis 10 Min. vor Beginn · Zahlung an der Kasse, nur bar');
+    const nota = tr('ticket_note', 'Nur bis 15 Min. vor Beginn reserviert · Zahlung an der Kasse, nur bar');
     const W = 600, H = 900;
     const arte = svgArte(codigo, 400).replace('<svg ', '<svg x="100" y="176" ');
     const recorte = (t, n) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
