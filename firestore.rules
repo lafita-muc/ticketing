@@ -30,7 +30,7 @@ service cloud.firestore {
 
     // Funciones SIN reserva online (solo taquilla el mismo día).
     // Deben coincidir con "soloTaquilla": true en movies.json. Ahora no hay ninguna.
-    function soloTaquilla(p) { return p in []; }
+    function soloTaquilla(p) { return false; }
 
     match /inscripciones/{clave} {
 
