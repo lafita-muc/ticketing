@@ -1,14 +1,14 @@
 [
   {
     "id": "un-cabo-suelto-1125",
-    "soloTaquilla": true,
     "titulo": "UN CABO SUELTO",
     "sinopsis": "Spielfilm · Uruguay, Argentinien, Spanien 2025 · 95 min · Regie: Daniel Hendler",
     "poster": "",
     "fecha": "2026-11-25",
     "hora": "19:00",
     "lugar": "Kulturzentrum Luise",
-    "capacidad": 35,
+    "capacidad": 130,
+    "aforo": 190,
     "maxEntradasPorPersona": 4,
     "direccion": "Daniel Hendler",
     "reparto": [
