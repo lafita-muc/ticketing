@@ -26,8 +26,13 @@ function aporta(r) {
   return (r.estado === 'activa' && r.asistencia !== 'no_vino') ? (r.personas || 0) : 0;
 }
 
+// Solo se dice cuántas plazas quedan cuando quedan pocas (10 o menos)
+const AVISO_PLAZAS = 10;
+function mostrarPlazas(libres) { return libres > 0 && libres <= AVISO_PLAZAS; }
+
 function textoPlazas(libres) {
   if (libres <= 0) return t('full_waitlist');
+  if (!mostrarPlazas(libres)) return '';
   if (libres === 1) return t('seats_one');
   return t('seats_left', { n: libres });
 }

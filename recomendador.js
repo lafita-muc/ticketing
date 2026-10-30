@@ -391,6 +391,7 @@ function evaluar(p, c, libres) {
   if (p.enlaceExterno) extra = t('r_online');
   else if (p.soloTaquilla) extra = t('r_boxoffice');
   else if (libres <= 0) extra = t('r_full');
+  else if (!mostrarPlazas(libres)) extra = t('r_open');
   else extra = libres === 1 ? t('r_seats_one') : t('r_seats', { n: libres });
 
   return { p, puntos, total, si, no, extra, completo: !p.enlaceExterno && !p.soloTaquilla && libres <= 0 };
