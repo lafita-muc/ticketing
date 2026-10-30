@@ -121,10 +121,13 @@ function pintarPlazas() {
   if (!pelicula) return;
   const nota = document.getElementById('plazas-note');
   const n = libres();
-  nota.hidden = false;
+  const partes = [];
+  if (n <= 0) partes.push(t('form_full_note'));
+  else if (mostrarPlazas(n)) partes.push(t('form_seats_note', { n }));
+  if (pelicula.aforo > capacidadDe(pelicula)) partes.push(t('opening_extra'));
+  nota.hidden = partes.length === 0;
   nota.classList.toggle('full', n <= 0);
-  nota.innerHTML = (n <= 0 ? t('form_full_note') : t('form_seats_note', { n }))
-    + (pelicula.aforo > capacidadDe(pelicula) ? `<br>${t('opening_extra', { n: pelicula.aforo })}` : '');
+  nota.innerHTML = partes.join('<br>');
   const btn = document.getElementById('btn-enviar');
   if (btn.textContent !== t('sending')) btn.textContent = textoBoton();
 }
