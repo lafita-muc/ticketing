@@ -845,3 +845,25 @@ function initLangSwitch() {
   });
   applyI18n();
 }
+
+// Países en la línea de datos de cada película: en pantalla se muestran con su
+// código de dos letras ("Uruguay, Argentinien, Spanien 2025" → "UY/AR/ES 2025").
+// En movies.json la sinopsis sigue con los nombres completos en alemán, que es
+// lo que usa el recomendador para buscar por país.
+const CODIGOS_PAIS = {
+  'Argentinien': 'AR', 'Belgien': 'BE', 'Bolivien': 'BO', 'Brasilien': 'BR', 'Chile': 'CL',
+  'Costa Rica': 'CR', 'Deutschland': 'DE', 'Ecuador': 'EC', 'Frankreich': 'FR', 'Guatemala': 'GT',
+  'Italien': 'IT', 'Kanada': 'CA', 'Kolumbien': 'CO', 'Kuba': 'CU', 'Luxemburg': 'LU',
+  'Mexiko': 'MX', 'Panama': 'PA', 'Paraguay': 'PY', 'Peru': 'PE', 'Portugal': 'PT',
+  'Spanien': 'ES', 'Uruguay': 'UY', 'USA': 'US', 'Venezuela': 'VE'
+};
+
+function metaCorta(sinopsis) {
+  return String(sinopsis || '').split(' · ').map(parte => {
+    const m = parte.match(/^(.+?) (\d{4})$/);
+    if (!m) return parte;
+    const paises = m[1].split(/\s*,\s*/);
+    if (!paises.every(p => CODIGOS_PAIS[p])) return parte;
+    return paises.map(p => CODIGOS_PAIS[p]).join('/') + ' ' + m[2];
+  }).join(' · ');
+}

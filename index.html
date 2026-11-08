@@ -135,7 +135,7 @@ function tarjeta(p, i, si, no, extra) {
       <div class="rec-body">
         <p class="rec-when">${diaCorto(p.fecha)} · ${esc(p.hora)}${t('time_suffix')} · ${esc(p.lugar)}</p>
         <h3 class="film-title">${esc(p.titulo)}</h3>
-        <p class="film-meta">${esc(p.sinopsis)}</p>
+        <p class="film-meta">${esc(metaCorta(p.sinopsis))}</p>
         <ul class="rec-why">
           ${si.map(x => `<li class="ok">${esc(x)}</li>`).join('')}
           ${no.map(x => `<li class="warn">${esc(x)}</li>`).join('')}
@@ -264,7 +264,7 @@ function render() {
           <div>
             ${p.poster ? `<img class="poster" src="${esc(p.poster)}" alt="">` : ''}
             <h3 class="film-title">${esc(p.titulo)}</h3>
-            <p class="film-meta">${esc(p.sinopsis)}</p>
+            <p class="film-meta">${esc(metaCorta(p.sinopsis))}</p>
             ${p.enlaceExterno || p.soloTaquilla ? '' : lineaPlazas(p)}
             ${fichaPelicula(p, 'prog-')}
           </div>
