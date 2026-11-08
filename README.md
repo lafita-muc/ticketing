@@ -66,6 +66,8 @@ Campos para el recomendador (opcionales, ya rellenados para 2026 a partir de fue
 | `temas` | Tono y temas: `misterio`, `onirico`, `inquietante`, `oscuro`, `noir`, `humor_negro`, `ternura`, `melancolia`, `infancia`, `memoria`, `duelo`, `mujeres`, `masculinidad`, `violencia`, `venganza`, `herencia`, `esoterico`, `rock`, `tango`, `guitarra`, `migracion`, `arte`, `biografia`, `amistad`, `nieve`, `desierto`, `playa`, `selva`, `huida`, `blanco_negro`, `personal` |
 | `tipo`, `duracion`, `paises` | Solo si la `sinopsis` no lo dice (p. ej. `"tipo": "documental"`, `"duracion": 80`, `"paises": ["Costa Rica"]` con nombres en alemán) |
 
+En la web, los países de la sinopsis se muestran con su código de dos letras (`Uruguay, Argentinien, Spanien 2025` → `UY/AR/ES 2025`). En `movies.json` se siguen escribiendo con el nombre completo en alemán; si aparece un país nuevo, hay que añadir su código en `CODIGOS_PAIS` (`i18n.js`) y en `PAISES` (`recomendador.js`).
+
 Si una película no tiene un género o tema, el recomendador no lo inventa. El tipo (ficción/documental/cortos), los países y la duración los saca de la `sinopsis` si no se ponen aparte.
 
 ## Recomendador con IA (opcional)
