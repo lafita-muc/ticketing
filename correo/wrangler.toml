@@ -1,0 +1,22 @@
+# Servicio de correo de confirmación (Cloudflare Workers, plan gratuito).
+# Instrucciones en el README del proyecto → "Correo de confirmación".
+name = "lafita-correo"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Qué web puede llamar a este servicio (la dirección de la web de tickets)
+ORIGEN_PERMITIDO = "https://lafita-muc.github.io"
+# Dirección de la web de tickets (para el enlace "ver / cambiar / cancelar")
+WEB_URL = "https://lafita-muc.github.io/ticketing"
+# Desde qué dirección sale el correo (tiene que estar verificada en Brevo)
+REMITENTE = "ticket@lafita.de"
+REMITENTE_NOMBRE = "LAFITA Tickets"
+# A dónde llegan las respuestas y qué correo sale como "ayuda"
+CONTACTO = "ticket@lafita.de"
+# Firebase (los mismos datos públicos que firebase-config.js)
+FIREBASE_PROJECT = "lafita26-4dd5b"
+FIREBASE_API_KEY = "AIzaSyD_mhwFkkb3JHH0hoZOgoWtpw3VAAhLyTE"
+
+# La clave de Brevo NO va aquí: se guarda como secreto con
+#   npx wrangler secret put BREVO_API_KEY

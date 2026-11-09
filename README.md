@@ -88,6 +88,26 @@ Sin esto, el recomendador ya funciona. Con esto, entiende cualquier frase y escr
 
 La IA solo usa la información de `movies.json` (no inventa datos) y siempre devuelve funciones del programa. Si tarda más de 25 s, falla o se acaba el límite de gasto, la web usa el recomendador sin IA.
 
+## Correo de confirmación
+
+Al reservar, la persona recibe un correo en su idioma (DE · ES · EN · PT) con la película, día, hora, sala, número de personas, código de entrada y animal, el aviso de pago en efectivo / 15 minutos, y un botón para ver su ticket, cambiar o cancelar (con su clave de gestión). Si quedó en lista de espera, el correo lo dice. Las respuestas llegan a `ticket@lafita.de`.
+
+Funciona con un pequeño servicio gratuito de Cloudflare (`correo/`) y **Brevo** para enviar (gratis hasta 300 correos al día). El servicio solo acepta la clave de una reserva recién hecha (menos de 15 min), la lee en Firebase y escribe a la dirección guardada ahí: nadie puede usarlo para mandar otros correos. Si el servicio falla, la reserva se guarda igual.
+
+1. Crear una cuenta gratis en [Brevo](https://www.brevo.com). En *Senders, Domains & Dedicated IPs* → **Domains**, añadir `lafita.de` y poner en el DNS los registros que indica (así los correos no caen en spam). Después, en **Senders**, añadir `ticket@lafita.de`.
+2. En Brevo → *SMTP & API* → **API Keys**, crear una clave.
+3. En la carpeta `correo/` (con Node.js y cuenta de Cloudflare, como para la IA):
+   ```bash
+   npm install
+   npx wrangler login
+   npx wrangler secret put BREVO_API_KEY   # pega la clave de Brevo
+   npx wrangler deploy                     # muestra la dirección del servicio
+   ```
+4. Pegar esa dirección en `registro.html`: `const CORREO_URL = 'https://lafita-correo….workers.dev';`
+5. Hacer una reserva de prueba con tu correo y borrarla después en el panel.
+
+El remitente, el correo de ayuda y la dirección de la web se cambian en `correo/wrangler.toml`; los textos del correo, en `TXT` dentro de `correo/src/index.js`.
+
 Si cambias la `capacidad` de una sala, cambia también `CAP()` en `firestore.rules` y vuelve a publicar las reglas en Firebase.
 
 Los cambios se ven en la web 1–2 minutos después de guardarlos en GitHub.
@@ -99,6 +119,7 @@ Los cambios se ven en la web 1–2 minutos después de guardarlos en GitHub.
 | `index.html` | Portada: recomendador + programa |
 | `recomendador.js` | Entiende el texto del recomendador y elige las películas (y dirección del servicio de IA) |
 | `ia/` | Servicio opcional de IA para el recomendador (Cloudflare Worker) |
+| `correo/` | Servicio del correo de confirmación (Cloudflare Worker + Brevo) |
 | `registro.html` | Formulario de reserva y ticket |
 | `gestionar.html` | Cambiar o cancelar una reserva |
 | `admin.html` | Panel del equipo |
