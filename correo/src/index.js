@@ -14,6 +14,19 @@
 
 const VENTANA_MIN = 15; // solo reservas creadas hace menos de esto
 
+// Valores por defecto: así el archivo se puede pegar tal cual en el editor
+// web de Cloudflare y solo hay que añadir el secreto BREVO_API_KEY.
+// (Las variables de wrangler.toml o del panel de Cloudflare tienen prioridad.)
+const POR_DEFECTO = {
+  ORIGEN_PERMITIDO: "https://lafita-muc.github.io",
+  WEB_URL: "https://lafita-muc.github.io/ticketing",
+  REMITENTE: "ticket@lafita.de",
+  REMITENTE_NOMBRE: "LAFITA Tickets",
+  CONTACTO: "ticket@lafita.de",
+  FIREBASE_PROJECT: "lafita26-4dd5b",
+  FIREBASE_API_KEY: "AIzaSyD_mhwFkkb3JHH0hoZOgoWtpw3VAAhLyTE",
+};
+
 const TXT = {
   de: {
     locale: "de-DE",
@@ -149,7 +162,8 @@ function correo(r, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, entorno) {
+    const env = { ...POR_DEFECTO, ...entorno };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(env) });
     if (request.method !== "POST") return json(env, { error: "method" }, 405);
 

@@ -96,7 +96,9 @@ Funciona con un pequeño servicio gratuito de Cloudflare (`correo/`) y **Brevo**
 
 1. Crear una cuenta gratis en [Brevo](https://www.brevo.com). En *Senders, Domains & Dedicated IPs* → **Domains**, añadir `lafita.de` y poner en el DNS los registros que indica (así los correos no caen en spam). Después, en **Senders**, añadir `ticket@lafita.de`.
 2. En Brevo → *SMTP & API* → **API Keys**, crear una clave.
-3. En la carpeta `correo/` (con Node.js y cuenta de Cloudflare, como para la IA):
+3. **Desde el iPad (sin computadora):** en [dash.cloudflare.com](https://dash.cloudflare.com) → *Workers & Pages* → *Create* → *Create Worker* (empezar con «Hello World»), nombre `lafita-correo`, *Deploy*. Luego *Edit code*: borrar todo, pegar el contenido de [`correo/src/index.js`](https://raw.githubusercontent.com/lafita-muc/ticketing/main/correo/src/index.js) y *Deploy*. En *Settings* → *Variables and Secrets* → *Add*: tipo **Secret**, nombre `BREVO_API_KEY`, valor = la clave de Brevo. La dirección del servicio sale arriba (`https://lafita-correo….workers.dev`).
+
+   **O con computadora**, en la carpeta `correo/` (con Node.js):
    ```bash
    npm install
    npx wrangler login
