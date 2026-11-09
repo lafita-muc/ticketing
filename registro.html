@@ -108,6 +108,10 @@
 <script src="plazas.js"></script>
 
 <script>
+// Dirección del servicio de correo de confirmación (carpeta correo/, ver README).
+// Vacía = no se manda correo; la reserva funciona igual.
+const CORREO_URL = '';
+
 const movieId = new URLSearchParams(location.search).get('pelicula');
 let pelicula = null;
 let ticketActual = null;
@@ -278,6 +282,16 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
     };
     guardarLocal(tk);
     mostrarTicket(tk);
+
+    // Correo de confirmación: si falla, la reserva ya está guardada igualmente
+    if (CORREO_URL) {
+      fetch(CORREO_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave }),
+        keepalive: true
+      }).catch(() => {});
+    }
   } catch (err) {
     errorBox.innerHTML = `<div class="alert error"></div>`;
     errorBox.firstChild.textContent = t('err_send', { msg: err.message });
