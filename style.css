@@ -563,3 +563,10 @@ td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
 .pill.guest { background: var(--lime); color: var(--ink); }
 .act.guest { border-style: dashed; }
 tr.is-guest td:first-child { box-shadow: inset 4px 0 0 var(--lime); }
+
+/* Página escondida de invitados (invitados.html) */
+.alert.guest-warning { margin: 0 0 18px; border-color: #d49b00; background: #fff6e0; }
+.alert.guest-warning p { margin: 0 0 10px; }
+.guest-link-box { margin: 0 0 18px; font-size: 0.9rem; }
+.guest-link-box code { word-break: break-all; background: #f2f2f2; padding: 2px 6px; }
+.seat-guest-tag { font-size: 0.75rem; color: #7a5600; }
