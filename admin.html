@@ -42,6 +42,9 @@
       <span><span id="usuario-actual" class="user-line"></span> <button class="btn secondary small" id="btn-logout" data-i18n="btn_logout"></button></span>
     </div>
 
+    <!-- Link escondido para invitados en las funciones de München Ticket -->
+    <p class="guest-link-box"><span data-i18n="admin_guest_link"></span><br><code id="link-invitados"></code></p>
+
     <!-- Ocupación de cada función -->
     <section class="seat-section">
       <h3 class="section-title" data-i18n="seats_title"></h3>
@@ -227,6 +230,7 @@ function renderAsientos() {
     return `<button type="button" class="seat-card${filtro === p.id ? ' active' : ''}${ocup >= cap ? ' full' : ''}" data-pid="${escapeHtml(p.id)}">
       <span class="seat-when">${escapeHtml(diaCorto(p.fecha))} · ${escapeHtml(p.hora)} · ${escapeHtml(p.lugar)}</span>
       <span class="seat-film">${escapeHtml(p.titulo)}</span>
+      ${p.enlaceExterno ? `<span class="seat-guest-tag">${t('seat_guests_only')}</span>` : ''}
       <span class="seats">${asientos}</span>
       <span class="seat-count"><strong>${t('seats_count', { n: ocup, cap })}</strong>${espera ? ` · ${t('waitlist_count', { n: espera })}` : ''}</span>
     </button>`;
@@ -326,13 +330,16 @@ function traducirError(code) {
   })[code] || t('login_other', { msg: code });
 }
 
+$('link-invitados').textContent = new URL('invitados.html', location.href).href;
+
 initLangSwitch();
 document.addEventListener('langchange', () => {
   if (usuarioActual) $('usuario-actual').textContent = t('connected_as', { email: usuarioActual });
   render();
 });
 fetch('movies.json', { cache: 'no-store' }).then(r => r.json()).then(list => {
-  peliculas = list.filter(p => !p.enlaceExterno && !p.soloTaquilla).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  // También las de München Ticket: ahí solo cuentan los sitios de invitados (máx. 10)
+  peliculas = list.filter(p => !p.soloTaquilla).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
   render();
   sincronizarContadores();
 }).catch(() => {});

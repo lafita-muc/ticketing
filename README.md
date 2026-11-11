@@ -15,6 +15,7 @@ Disponible en **alemán, español, inglés y portugués**.
 - **Apertura (Kulturzentrum Luise, 25.11.):** aforo de **190**, pero solo se dan **130 reservas** online (`"capacidad": 130, "aforo": 190` en `movies.json` y `CAP()` en `firestore.rules`). La web no da estas cifras: solo avisa de que hay más plazas en la taquilla el mismo día.
 - **Ayuda técnica:** en la portada, el formulario y la página de gestión sale el correo **ticket@lafita.de** (se cambia en `CONTACTO`, en `i18n.js`).
 - **Gasteig HP8:** estas funciones no usan el formulario; el botón **München Ticket ↗** lleva a la venta de München Ticket.
+- **Invitados en Gasteig HP8 (link escondido):** `invitados.html` no tiene ningún enlace en la web pública; el equipo comparte el link (sale arriba en el panel). Arriba avisa de que es **solo para invitados** y que las entradas normales están en **München Ticket**. Para reservar hace falta el **código de invitado** (solo el código, sin correo). El código **no está en GitHub**: está en Firebase → Firestore → colección `config`, documento `invitados`, campo `codigo` (texto). Para cambiarlo, se cambia ahí; si cambias la contraseña de admin y quieres que sigan siendo iguales, cámbialo también ahí. Máximo **10 sitios por función** (`CUPO_INVITADOS` en `plazas.js` y `CAP()`/`soloInvitados()` en `firestore.rules`). Las reservas salen en el panel ya marcadas **★ Invitado** y con su ocupación de 10 casillas. No se manda correo de confirmación (el correo habla de pagar en efectivo).
 - **Ticket con código y arte:** código de entrada (ej. `LAF-7K3QM`), un nombre fácil de decir ("Jaguar Turquesa") y una imagen única generada a partir del código.
 - **Cambiar o cancelar:** cada reserva tiene una **clave de gestión** privada (`XXXX-XXXX-XXXX`) para corregir los datos o cancelar. Una vez que la taquilla la marca (vino / no vino), ya no se puede cambiar.
 - **Panel del equipo** (`admin.html`, con usuario y contraseña):
@@ -123,6 +124,7 @@ Los cambios se ven en la web 1–2 minutos después de guardarlos en GitHub.
 | `ia/` | Servicio opcional de IA para el recomendador (Cloudflare Worker) |
 | `correo/` | Servicio del correo de confirmación (Cloudflare Worker + Brevo) |
 | `registro.html` | Formulario de reserva y ticket |
+| `invitados.html` | Reserva escondida para invitados (funciones de München Ticket, máx. 10) |
 | `gestionar.html` | Cambiar o cancelar una reserva |
 | `admin.html` | Panel del equipo |
 | `movies.json` | Películas y funciones |

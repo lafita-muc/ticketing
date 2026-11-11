@@ -6,6 +6,10 @@
 // - El equipo (con login) puede verlo todo y marcar asistencia, cancelar,
 //   confirmar desde la lista de espera, marcar invitados y borrar.
 // - El campo "invitado" solo lo pone el equipo y la web pública no lo muestra.
+// - Funciones de München Ticket (Gasteig HP8): el público no reserva aquí,
+//   solo invitados desde invitados.html con el código de invitado, máx. 10.
+//   El código se guarda en Firestore: documento config/invitados, campo "codigo"
+//   (se crea a mano en la consola de Firebase; nadie lo puede leer desde la web).
 // - "funciones" guarda cuántas plazas ocupadas tiene cada función, para que la
 //   web pública sepa cuántas quedan sin ver los datos de nadie.
 
@@ -16,7 +20,17 @@ service cloud.firestore {
     // Plazas que se pueden reservar por función. Deben coincidir con "capacidad"
     // en movies.json: la apertura tiene 130 reservas (aforo 190, el resto en
     // taquilla); las demás funciones, 35.
-    function CAP(p) { return p == 'un-cabo-suelto-1125' ? 130 : 35; }
+    function CAP(p) {
+      return p == 'un-cabo-suelto-1125' ? 130 : (soloInvitados(p) ? 10 : 35);
+    }
+
+    // Funciones que se venden en München Ticket ("enlaceExterno" en movies.json):
+    // aquí solo se apuntan invitados (invitados.html), máximo 10 sitios.
+    function soloInvitados(p) {
+      return p in ['el-sonido-de-antes-1127', 'harakiri-me-haces-falta-1127',
+        'cuerpo-celeste-1128', 'moscas-1128', 'narciso-1128',
+        'si-vas-para-chile-1129', 'siempre-soy-tu-animal-materno-1129', 'el-deshielo-1129'];
+    }
 
     function ins(c) { return /databases/$(database)/documents/inscripciones/$(c); }
     function fun(p) { return /databases/$(database)/documents/funciones/$(p); }
@@ -57,9 +71,20 @@ service cloud.firestore {
         && valida(request.resource.data)
         && !soloTaquilla(request.resource.data.peliculaId)
         && !('asistencia' in request.resource.data)
-        && !('invitado' in request.resource.data)
         && request.resource.data.estado in ['activa', 'espera']
-        && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data);
+        && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data)
+        && (
+          // Funciones normales: sin marca de invitado
+          (!soloInvitados(request.resource.data.peliculaId)
+            && !('invitado' in request.resource.data)
+            && !('codigoInvitado' in request.resource.data))
+          // Funciones de München Ticket: solo invitados con el código correcto
+          || (soloInvitados(request.resource.data.peliculaId)
+            && request.resource.data.estado == 'activa'
+            && request.resource.data.get('invitado', false) == true
+            && request.resource.data.get('codigoInvitado', '') ==
+                 get(/databases/$(database)/documents/config/invitados).data.codigo)
+        );
 
       // Ver UNA reserva: quien conoce su clave de gestión (el ID)
       allow get: if true;
@@ -81,6 +106,12 @@ service cloud.firestore {
 
       // Borrar: solo el equipo
       allow delete: if esEquipo();
+    }
+
+    // Código de invitado: nadie lo lee ni lo cambia desde la web
+    // (solo desde la consola de Firebase)
+    match /config/{doc} {
+      allow read, write: if false;
     }
 
     match /funciones/{pid} {

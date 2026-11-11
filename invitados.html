@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>LAFITA Tickets — Gäste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Oswald:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!--
+  Página ESCONDIDA para invitados en las funciones de München Ticket (Gasteig HP8).
+  No hay ningún enlace a ella en la web pública: el equipo comparte el link.
+  - Solo se puede reservar con el código de invitado. El código NO está en este
+    archivo: lo comprueba Firebase con el documento config/invitados (campo "codigo"),
+    ver README.
+  - Máximo CUPO_INVITADOS (10, en plazas.js) sitios por función.
+  - Las reservas salen en admin.html ya marcadas como ★ Invitado.
+-->
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="wordmark">LAFITA</span><span class="tag">Tickets</span></a>
+    <div class="header-right">
+      <div class="lang-switch"></div>
+      <div class="header-dates">25.–29.11.2026<small data-i18n="inv_page_title"></small></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="alert guest-warning">
+    <p data-i18n="inv_warning"></p>
+    <a class="btn secondary small" id="link-mt" href="#" target="_blank" rel="noopener" data-i18n="inv_btn_mt"></a>
+  </div>
+
+  <div id="cargando" class="alert info" data-i18n="loading"></div>
+
+  <!-- Paso 1: formulario -->
+  <div id="paso-form" class="hidden">
+    <div class="form-card">
+      <h2 data-i18n="inv_page_title"></h2>
+
+      <form id="form-invitado" novalidate>
+        <label for="pelicula"><span data-i18n="inv_lbl_film"></span> *</label>
+        <select id="pelicula" required></select>
+        <div id="plazas-note" class="seats-note" hidden></div>
+
+        <label for="nombre"><span data-i18n="lbl_name"></span> *</label>
+        <input type="text" id="nombre" required minlength="2" maxlength="120" autocomplete="name" aria-describedby="nombre-err">
+        <p class="field-error" id="nombre-err" aria-live="polite"></p>
+
+        <label for="email"><span data-i18n="lbl_email"></span> *</label>
+        <input type="email" id="email" required maxlength="160" autocomplete="email" aria-describedby="email-err">
+        <p class="field-error" id="email-err" aria-live="polite"></p>
+
+        <label for="personas"><span data-i18n="lbl_people"></span> *</label>
+        <select id="personas" required aria-describedby="personas-err"></select>
+        <p class="field-error" id="personas-err" aria-live="polite"></p>
+
+        <label for="codigo-invitado"><span data-i18n="inv_lbl_code"></span> *</label>
+        <input type="password" id="codigo-invitado" required autocomplete="off">
+
+        <div class="form-actions">
+          <button type="submit" class="btn" id="btn-enviar" data-i18n="btn_send" disabled></button>
+          <p class="form-hint" id="form-hint" data-i18n="all_required"></p>
+        </div>
+      </form>
+      <div id="error"></div>
+      <p class="help-line" data-i18n="help_text"></p>
+    </div>
+  </div>
+
+  <!-- Paso 2: ticket -->
+  <div id="paso-ticket" class="hidden">
+    <div class="ticket-wrap">
+      <p class="ticket-intro"><strong data-i18n="inv_ticket_title"></strong><span data-i18n="inv_ticket_text"></span></p>
+      <div id="ticket-svg" class="ticket-svg"></div>
+      <div class="ticket-actions">
+        <button class="btn" id="btn-descargar" data-i18n="btn_download"></button>
+      </div>
+      <button class="link-btn" id="btn-nueva" data-i18n="btn_again"></button>
+
+      <div class="manage-box">
+        <h3 data-i18n="manage_key_label"></h3>
+        <div class="key-row">
+          <span class="key" id="clave"></span>
+          <button type="button" class="btn secondary small" id="btn-copiar" data-i18n="btn_copy"></button>
+        </div>
+        <p data-i18n="manage_key_hint"></p>
+        <a class="manage-link" id="link-gestion" href="gestionar.html" data-i18n="btn_manage"></a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="inner">
+    <span>LAFITA · Lateinamerikanische Filmtage München</span>
+    <span><a href="https://lafita.de">lafita.de</a></span>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="i18n.js"></script>
+<script src="ticket-art.js"></script>
+<script src="validacion.js"></script>
+<script src="plazas.js"></script>
+
+<script>
+const $ = id => document.getElementById(id);
+let peliculas = [];
+let ocupadas = {};
+let ticketActual = null;
+
+function actual() { return peliculas.find(p => p.id === $('pelicula').value); }
+function libres(p) { return p ? capacidadDe(p) - (ocupadas[p.id] || 0) : 0; }
+
+function pintarSelect() {
+  const previo = $('pelicula').value;
+  $('pelicula').innerHTML = `<option value="">${t('opt_choose')}</option>` + peliculas.map(p =>
+    `<option value="${esc(p.id)}"${libres(p) <= 0 ? ' disabled' : ''}>${esc(diaCorto(p.fecha))} ${esc(p.hora)} · ${esc(p.titulo)}</option>`).join('');
+  if (peliculas.some(p => p.id === previo)) $('pelicula').value = previo;
+}
+
+function pintarPlazas() {
+  const p = actual(), nota = $('plazas-note');
+  const max = p ? Math.min(p.maxEntradasPorPersona || 4, Math.max(libres(p), 0)) : 4;
+  const sel = $('personas'), previo = sel.value;
+  sel.innerHTML = `<option value="">${t('opt_choose')}</option>` +
+    Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  if (previo && +previo <= max) sel.value = previo;
+  if (!p) { nota.hidden = true; return; }
+  const n = libres(p);
+  nota.hidden = false;
+  nota.classList.toggle('full', n <= 0);
+  nota.textContent = n <= 0 ? t('inv_full') : t('inv_seats', { n, cap: capacidadDe(p) });
+  validacion.refrescar();
+}
+
+function pintarTodo() {
+  pintarSelect();
+  pintarPlazas();
+  if (ticketActual) $('ticket-svg').innerHTML = LafitaTicket.svgTicket(ticketActual);
+}
+
+function mostrarError(msg) {
+  $('error').innerHTML = '<div class="alert error"></div>';
+  $('error').firstChild.textContent = msg;
+}
+
+async function init() {
+  try {
+    const lista = await (await fetch('movies.json', { cache: 'no-store' })).json();
+    peliculas = lista.filter(p => p.enlaceExterno)
+      .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+    if (peliculas[0]) $('link-mt').href = peliculas[0].enlaceExterno;
+    const preelegida = new URLSearchParams(location.search).get('pelicula');
+    $('cargando').remove();
+    pintarTodo();
+    if (peliculas.some(p => p.id === preelegida)) { $('pelicula').value = preelegida; pintarPlazas(); }
+    $('paso-form').classList.remove('hidden');
+    db.collection('funciones').onSnapshot(snap => {
+      snap.forEach(d => { ocupadas[d.id] = d.data().ocupadas || 0; });
+      pintarTodo();
+    }, () => {});
+  } catch (e) {
+    $('cargando').className = 'alert error';
+    $('cargando').textContent = t('err_loadfilm', { msg: e.message });
+  }
+}
+
+$('pelicula').addEventListener('change', pintarPlazas);
+
+$('form-invitado').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('error').innerHTML = '';
+  if (!validacion.comprobar()) return;
+  const p = actual();
+  if (!p) { $('pelicula').focus(); return; }
+  const pass = $('codigo-invitado').value;
+  if (!pass) { $('codigo-invitado').focus(); return; }
+  const { nombre, email, personas } = validacion.leer();
+  const btn = $('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = t('sending');
+
+  try {
+    const codigo = LafitaTicket.generarCodigo();
+    const clave = LafitaTicket.generarClave();
+    const refReserva = db.collection('inscripciones').doc(clave);
+    const refFuncion = db.collection('funciones').doc(p.id);
+
+    // Se leen los sitios ocupados y se guarda la reserva a la vez (máx. 10)
+    await db.runTransaction(async tx => {
+      const f = await tx.get(refFuncion);
+      const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
+      if (ocup + personas > capacidadDe(p)) {
+        const err = new Error('LLENO'); err.quedan = Math.max(capacidadDe(p) - ocup, 0); throw err;
+      }
+      tx.set(refReserva, {
+        codigo,
+        nombreArte: LafitaTicket.nombreArte(codigo),
+        peliculaId: p.id,
+        peliculaTitulo: p.titulo,
+        fecha: p.fecha,
+        hora: p.hora,
+        lugar: p.lugar,
+        nombre, email, personas,
+        estado: 'activa',
+        invitado: true,
+        codigoInvitado: pass,   // Firebase lo compara con config/invitados
+        idioma: LANG,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tx.set(refFuncion, { ocupadas: ocup + personas, ultima: clave });
+    });
+
+    ticketActual = { codigo, clave, nombre, personas, titulo: p.titulo, fecha: p.fecha, hora: p.hora, lugar: p.lugar, estado: 'activa' };
+    $('ticket-svg').innerHTML = LafitaTicket.svgTicket(ticketActual);
+    $('clave').textContent = LafitaTicket.formatearClave(clave);
+    $('link-gestion').href = 'gestionar.html?clave=' + clave;
+    $('paso-form').classList.add('hidden');
+    $('paso-ticket').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    if (err.code === 'permission-denied') mostrarError(t('inv_err_code'));
+    else if (err.message === 'LLENO') mostrarError(t('inv_err_full', { n: err.quedan }));
+    else mostrarError(t('err_send', { msg: err.message }));
+  } finally {
+    $('codigo-invitado').value = '';
+    btn.textContent = t('btn_send');
+    validacion.refrescar();
+  }
+});
+
+$('btn-descargar').addEventListener('click', () => {
+  if (ticketActual) LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), `LAFITA-${ticketActual.codigo}.png`);
+});
+
+$('btn-copiar').addEventListener('click', async e => {
+  const texto = LafitaTicket.formatearClave(ticketActual && ticketActual.clave);
+  try { await navigator.clipboard.writeText(texto); e.target.textContent = t('copied'); }
+  catch (err) { window.prompt('', texto); }
+  setTimeout(() => { e.target.textContent = t('btn_copy'); }, 2000);
+});
+
+$('btn-nueva').addEventListener('click', () => {
+  $('form-invitado').reset();
+  validacion.reiniciar();
+  ticketActual = null;
+  $('paso-ticket').classList.add('hidden');
+  $('paso-form').classList.remove('hidden');
+  pintarTodo();
+});
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+initLangSwitch();
+const validacion = conectarValidacion(
+  { nombre: 'nombre', email: 'email', personas: 'personas' },
+  $('btn-enviar'),
+  $('form-hint')
+);
+document.addEventListener('langchange', pintarTodo);
+init();
+</script>
+
+</body>
+</html>

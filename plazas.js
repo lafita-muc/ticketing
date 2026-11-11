@@ -17,7 +17,13 @@
 
 const CAPACIDAD_POR_DEFECTO = 35;
 
+// Funciones de München Ticket (Gasteig HP8): el público compra fuera, pero hay
+// un formulario escondido para invitados (invitados.html) con un máximo de
+// 10 sitios. Si lo cambias, cambia también CAP() en firestore.rules.
+const CUPO_INVITADOS = 10;
+
 function capacidadDe(pelicula) {
+  if (pelicula && pelicula.enlaceExterno) return pelicula.cupoInvitados || CUPO_INVITADOS;
   return (pelicula && pelicula.capacidad) || CAPACIDAD_POR_DEFECTO;
 }
 
