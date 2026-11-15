@@ -104,6 +104,7 @@
     "capacidad": 35,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://www.muenchenticket.de/event/lafita-lateinamerikanische-filmtage-muenchen-2026-40078/",
+    "cupoInvitados": 17,
     "direccion": "Yael Szmulewicz",
     "generos": [
       "musica"
@@ -274,6 +275,7 @@
     "capacidad": 35,
     "maxEntradasPorPersona": 4,
     "enlaceExterno": "https://www.muenchenticket.de/event/lafita-lateinamerikanische-filmtage-muenchen-2026-40078/",
+    "cupoInvitados": 20,
     "direccion": "Sebastián González, Amílcar Infante",
     "generos": [
       "politica"
