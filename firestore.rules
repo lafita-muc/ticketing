@@ -20,8 +20,13 @@ service cloud.firestore {
     // Plazas que se pueden reservar por función. Deben coincidir con "capacidad"
     // en movies.json: la apertura tiene 130 reservas (aforo 190, el resto en
     // taquilla); las demás funciones, 35.
+    // Invitados: 10 por función de München Ticket, salvo EL SONIDO DE ANTES (17)
+    // y SI VAS PARA CHILE (20) ("cupoInvitados" en movies.json).
     function CAP(p) {
-      return p == 'un-cabo-suelto-1125' ? 130 : (soloInvitados(p) ? 10 : 35);
+      return p == 'un-cabo-suelto-1125' ? 130
+        : p == 'el-sonido-de-antes-1127' ? 17
+        : p == 'si-vas-para-chile-1129' ? 20
+        : (soloInvitados(p) ? 10 : 35);
     }
 
     // Funciones que se venden en München Ticket ("enlaceExterno" en movies.json):
