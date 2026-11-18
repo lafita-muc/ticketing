@@ -3,7 +3,7 @@
 // ============================================================
 // Cada función tiene 35 plazas para reservar (se puede cambiar por película
 // con "capacidad" en movies.json; si lo cambias, cambia también CAP() en
-// firestore.rules). La apertura: 130 reservas y "aforo": 190 (el resto se
+// firestore.rules). La apertura: 170 reservas y "aforo": 190 (el resto se
 // vende en taquilla).
 //
 // Una reserva OCUPA plazas si está "activa" y nadie la marcó como
