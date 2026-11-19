@@ -241,7 +241,7 @@ $('form-invitado').addEventListener('submit', async e => {
 });
 
 $('btn-descargar').addEventListener('click', () => {
-  if (ticketActual) LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), `LAFITA-${ticketActual.codigo}.png`);
+  if (ticketActual) LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), 'LAFITA-ticket.png');
 });
 
 $('btn-copiar').addEventListener('click', async e => {
