@@ -20,7 +20,7 @@ Disponible en **alemán, español, inglés y portugués**.
 - **Cambiar o cancelar:** cada reserva tiene una **clave de gestión** privada (`XXXX-XXXX-XXXX`) para corregir los datos o cancelar. Una vez que la taquilla la marca (vino / no vino), ya no se puede cambiar.
 - **Panel del equipo** (`admin.html`, con usuario y contraseña):
   - **ocupación de cada función**: 35 casillas con reservado / vino / libre, y cuántas personas hay en espera; tocando una función se filtra la lista;
-  - por reserva: **✓ Vino**, **✗ No vino** (libera las plazas), **Cancelar**, **Confirmar** (desde la lista de espera), **Deshacer** y **Borrar**;
+  - por reserva: **✓ Vino** (o **✓ Vinieron los 4**), **+1 llegó** (para grupos que llegan por partes: se ve "2/4 llegaron" en directo), **Liberar resto** (las que faltan ya no vienen: esas plazas quedan libres), **✗ No vino** (libera las plazas), **Cancelar**, **Confirmar** (desde la lista de espera), **Deshacer** y **Borrar**;
   - **★ Invitado:** marca una reserva como invitado especial (se registran como reservas normales). Solo lo ve el equipo; hay filtro «Solo invitados» y contador;
   - búsqueda por código, nombre, email o animal; totales; exportar a CSV / Excel.
 
@@ -28,7 +28,8 @@ Disponible en **alemán, español, inglés y portugués**.
 
 1. La persona enseña su ticket. Buscar su animal o su nombre en el panel (en reservas antiguas también vale el código).
 2. Comprobar que la imagen coincide y marcar **✓ Vino** (y cobrar en efectivo).
-3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
+   Si de una reserva de 4 llegan solo 2, pulsar **+1 llegó** por cada una; las 4 plazas siguen guardadas mientras tanto.
+3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó y **Liberar resto** en las reservas a medias. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
 
 ## Actualizar la web
 

@@ -442,6 +442,7 @@ tr.is-cancelled .codigo { text-decoration: line-through; }
 .pill.wait { background: #fff6e0; color: #9a6b00; }
 .pill.came { background: var(--ink); color: var(--paper); }
 .pill.noshow { background: #eee; color: var(--grey); }
+.pill.partial { background: #fff1cc; color: #7a5600; }
 tr.is-noshow td { color: var(--grey); }
 .acts { display: flex; flex-wrap: wrap; gap: 4px; min-width: 150px; }
 .act {

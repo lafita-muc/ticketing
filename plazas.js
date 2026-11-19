@@ -10,6 +10,11 @@
 // "no vino" en la taquilla. Las reservas "en espera" y las canceladas
 // no ocupan plazas.
 //
+// Llegadas por partes: si una reserva es de 4 y de momento llegaron 2, la
+// taquilla lo apunta ("llegaron": 2). Las 4 plazas siguen guardadas hasta
+// que alguien pulsa "Liberar" ("liberado": true); desde ahí solo ocupa las
+// que llegaron y el resto queda libre para otra gente.
+//
 // El número de plazas ocupadas de cada función se guarda en Firebase
 // (colección "funciones") para que la web pública sepa cuántas quedan
 // sin poder ver los datos de las reservas.
@@ -29,7 +34,16 @@ function capacidadDe(pelicula) {
 
 function aporta(r) {
   if (!r) return 0;
-  return (r.estado === 'activa' && r.asistencia !== 'no_vino') ? (r.personas || 0) : 0;
+  if (r.estado !== 'activa' || r.asistencia === 'no_vino') return 0;
+  if (r.liberado) return Math.min(r.llegaron || 0, r.personas || 0);
+  return r.personas || 0;
+}
+
+// Cuántas personas de una reserva ya pasaron por la taquilla
+function llegaronDe(r) {
+  if (!r || r.estado !== 'activa') return 0;
+  if (typeof r.llegaron === 'number') return Math.min(r.llegaron, r.personas || 0);
+  return r.asistencia === 'vino' ? (r.personas || 0) : 0;   // reservas marcadas antes de este cambio
 }
 
 // Solo se dice cuántas plazas quedan cuando quedan pocas (10 o menos)
