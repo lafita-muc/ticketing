@@ -143,7 +143,7 @@ auth.onAuthStateChanged(user => {
 function reservasDe(pid, lista = todas) { return lista.filter(r => r.peliculaId === pid); }
 function ocupadasDe(pid, lista = todas) { return reservasDe(pid, lista).reduce((s, r) => s + aporta(r), 0); }
 function vinieronDe(pid) {
-  return reservasDe(pid).filter(r => r.estado === 'activa' && r.asistencia === 'vino').reduce((s, r) => s + (r.personas || 0), 0);
+  return reservasDe(pid).reduce((s, r) => s + llegaronDe(r), 0);
 }
 function esperaDe(pid) {
   return reservasDe(pid).filter(r => r.estado === 'espera').reduce((s, r) => s + (r.personas || 0), 0);
@@ -172,6 +172,12 @@ function sincronizarAhora() {
 async function aplicar(r, cambios, borrar) {
   $('accion-msg').innerHTML = '';
   const nueva = borrar ? null : Object.assign({}, r, cambios);
+  // Los campos que se borran (FieldValue.delete) no cuentan para el cálculo local
+  const BORRAR = firebase.firestore.FieldValue.delete();
+  if (nueva) Object.keys(cambios).forEach(k => {
+    const v = cambios[k];
+    if (v && typeof v.isEqual === 'function' && v.isEqual(BORRAR)) delete nueva[k];
+  });
   const lista = todas.filter(x => x.id !== r.id).concat(nueva ? [nueva] : []);
   const ocup = ocupadasDe(r.peliculaId, lista);
   const p = peliculas.find(x => x.id === r.peliculaId);
@@ -201,9 +207,16 @@ $('tabla-body').addEventListener('click', e => {
   const r = todas.find(x => x.id === b.dataset.id); if (!r) return;
   const del = firebase.firestore.FieldValue.delete();
   switch (b.dataset.act) {
-    case 'vino':     return aplicar(r, { asistencia: 'vino' });
-    case 'no_vino':  return aplicar(r, { asistencia: 'no_vino' });
-    case 'deshacer': return aplicar(r, { asistencia: del });
+    case 'vino':     return aplicar(r, { asistencia: 'vino', llegaron: r.personas || 0 });
+    case 'no_vino':  return aplicar(r, { asistencia: 'no_vino', llegaron: del, liberado: del });
+    // Llegó una persona más (si ya están todas, la reserva queda como "vino")
+    case 'mas1': {
+      const n = Math.min(llegaronDe(r) + 1, r.personas || 0);
+      return aplicar(r, { llegaron: n, asistencia: n >= (r.personas || 0) ? 'vino' : 'parcial' });
+    }
+    // Las que faltan ya no vienen: sus plazas quedan libres
+    case 'liberar':  return aplicar(r, { asistencia: 'vino', liberado: true });
+    case 'deshacer': return aplicar(r, { asistencia: del, llegaron: del, liberado: del });
     case 'confirmar':return aplicar(r, { estado: 'activa' });
     case 'cancelar': if (confirm(t('confirm_cancel_staff'))) aplicar(r, { estado: 'cancelada' }); return;
     case 'borrar':   if (confirm(t('confirm_delete'))) aplicar(r, null, true); return;
@@ -253,6 +266,9 @@ function filtradas() {
 function estadoHtml(r) {
   if (r.estado === 'cancelada') return `<span class="pill cancel">${t('status_cancelled')}</span>`;
   if (r.estado === 'espera') return `<span class="pill wait">${t('status_waitlist')}</span>`;
+  const n = r.personas || 0, k = llegaronDe(r);
+  if (r.asistencia === 'parcial') return `<span class="pill partial">${t('att_partial', { k, n })}</span>`;
+  if (r.asistencia === 'vino' && k < n) return `<span class="pill came">${t('att_partial', { k, n })}</span><div class="sub">${t('att_released', { n: n - k })}</div>`;
   if (r.asistencia === 'vino') return `<span class="pill came">${t('att_came')}</span>`;
   if (r.asistencia === 'no_vino') return `<span class="pill noshow">${t('att_noshow')}</span>`;
   return `<span class="pill ok">${t('status_active')}</span>`;
@@ -261,7 +277,14 @@ function estadoHtml(r) {
 function accionesHtml(r) {
   const b = (act, txt, cls = '') => `<button type="button" class="act ${cls}" data-act="${act}" data-id="${escapeHtml(r.id)}">${txt}</button>`;
   let h = '';
-  if (r.estado === 'activa' && !r.asistencia) h += b('vino', t('act_came'), 'ok') + b('no_vino', t('act_noshow'), 'no') + b('cancelar', t('act_cancel'));
+  const n = r.personas || 0, k = llegaronDe(r);
+  if (r.estado === 'activa' && !r.asistencia) {
+    h += b('vino', n > 1 ? t('act_came_all', { n }) : t('act_came'), 'ok');
+    if (n > 1) h += b('mas1', t('act_plus1'));
+    h += b('no_vino', t('act_noshow'), 'no') + b('cancelar', t('act_cancel'));
+  }
+  else if (r.estado === 'activa' && r.asistencia === 'parcial')
+    h += b('mas1', t('act_plus1'), 'ok') + b('liberar', t('act_release', { n: n - k }), 'no') + b('deshacer', t('act_undo'));
   else if (r.estado === 'activa') h += b('deshacer', t('act_undo'));
   else if (r.estado === 'espera') h += b('confirmar', t('act_promote'), 'ok') + b('cancelar', t('act_cancel'));
   if (r.estado !== 'cancelada') h += b('invitado', r.invitado ? t('btn_unguest') : `★ ${t('btn_guest')}`, 'guest');
@@ -274,7 +297,7 @@ function render() {
   renderAsientos();
   const datos = filtradas();
   $('tabla-body').innerHTML = datos.map(r => `
-    <tr class="${r.estado === 'cancelada' ? 'is-cancelled' : ''}${r.asistencia === 'no_vino' ? ' is-noshow' : ''}${r.invitado ? ' is-guest' : ''}">
+    <tr class="${r.estado === 'cancelada' ? 'is-cancelled' : ''}${r.asistencia === 'parcial' ? ' is-partial' : ''}${r.asistencia === 'no_vino' ? ' is-noshow' : ''}${r.invitado ? ' is-guest' : ''}">
       <td>${estadoHtml(r)}</td>
       <td>${accionesHtml(r)}</td>
       <td><div class="code-cell"><span class="mini-arte">${LafitaTicket.svgArte(r.codigo || r.id, 60)}</span>
@@ -291,7 +314,7 @@ function render() {
   $('stats').innerHTML = `
     <div class="stat-box"><div class="num">${activas.length}</div><div class="label">${t('stat_res')}</div></div>
     <div class="stat-box"><div class="num">${suma(activas)}</div><div class="label">${t('stat_people')}</div></div>
-    <div class="stat-box"><div class="num">${suma(activas.filter(r => r.asistencia === 'vino'))}</div><div class="label">${t('stat_came')}</div></div>
+    <div class="stat-box"><div class="num">${activas.reduce((s, r) => s + llegaronDe(r), 0)}</div><div class="label">${t('stat_came')}</div></div>
     <div class="stat-box"><div class="num">${suma(datos.filter(r => r.estado === 'espera'))}</div><div class="label">${t('stat_waitlist')}</div></div>
     <div class="stat-box"><div class="num">${datos.filter(r => r.estado === 'cancelada').length}</div><div class="label">${t('stat_cancelled')}</div></div>
     <div class="stat-box"><div class="num">${suma(activas.filter(r => r.invitado))}</div><div class="label">${t('stat_guests')}</div></div>`;
@@ -302,10 +325,10 @@ $('buscar').addEventListener('input', render);
 
 // ---------- CSV ----------
 $('btn-csv').addEventListener('click', () => {
-  const filas = [['Codigo', 'Estado', 'Asistencia', 'Invitado', 'Nombre arte', 'Nombre', 'Email', 'Personas', 'Pelicula', 'Fecha funcion', 'Hora', 'Enviado']];
+  const filas = [['Codigo', 'Estado', 'Asistencia', 'Invitado', 'Nombre arte', 'Nombre', 'Email', 'Personas', 'Llegaron', 'Pelicula', 'Fecha funcion', 'Hora', 'Enviado']];
   filtradas().forEach(r => filas.push([
     r.codigo || r.id, r.estado || 'activa', r.asistencia || '', r.invitado ? 'si' : '', r.nombreArte || '', r.nombre || '', r.email || '',
-    r.personas || 0, r.peliculaTitulo || '', r.fecha || '', r.hora || '', formatearTimestamp(r.creadoEn)
+    r.personas || 0, llegaronDe(r), r.peliculaTitulo || '', r.fecha || '', r.hora || '', formatearTimestamp(r.creadoEn)
   ]));
   const csv = filas.map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
