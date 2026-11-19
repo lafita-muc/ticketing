@@ -1,7 +1,8 @@
 // ============================================================
 // LAFITA — código único + arte generativo para cada inscripción
 // ============================================================
-// Cada inscripción recibe un código tipo "LAF-7K3QM".
+// Cada inscripción recibe un código interno tipo "LAF-7K3QM" (se guarda en
+// Firebase y sale en el panel, pero ya no se enseña a quien reserva).
 // A partir de ese código se genera SIEMPRE la misma imagen y el mismo
 // nombre ("Jaguar Turquesa"), así el equipo puede comprobarlo en la
 // entrada mirando la imagen, el nombre o el código.
@@ -146,8 +147,7 @@ const LafitaTicket = (() => {
   <rect x="100" y="176" width="400" height="400" fill="none" stroke="#111" stroke-width="3"/>
   ${estado === 'espera' ? `<rect x="100" y="352" width="400" height="48" fill="#111"/>
   <text x="${W / 2}" y="385" text-anchor="middle" font-family="${cond}" font-size="28" font-weight="500" letter-spacing="3" fill="#fff">${esc(tr('waitlist_badge', 'WARTELISTE'))}</text>` : ''}
-  <text x="${W / 2}" y="622" text-anchor="middle" font-family="${body}" font-size="22" font-weight="600" fill="#4f9670">${esc(nombreArte(codigo))}</text>
-  <text x="${W / 2}" y="672" text-anchor="middle" font-family="Courier New, monospace" font-size="46" font-weight="700" letter-spacing="3" fill="#111">${esc(codigo)}</text>
+  <text x="${W / 2}" y="650" text-anchor="middle" font-family="${body}" font-size="34" font-weight="600" fill="#4f9670">${esc(nombreArte(codigo))}</text>
   <rect x="40" y="700" width="520" height="3" fill="#111"/>
   <text x="40" y="748" font-family="${cond}" font-size="32" font-weight="500" fill="#111">${esc(recorte(String(titulo).toUpperCase(), 30))}</text>
   <text x="40" y="784" font-family="${body}" font-size="19" font-weight="600" fill="#111">${esc(cuando)} · ${esc(hora)}${esc(sufijo)} · ${esc(recorte(lugar, 26))}</text>

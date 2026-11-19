@@ -135,7 +135,7 @@ function pintar() {
   const cancelada = reserva.estado === 'cancelada';
   const gestionada = !!reserva.asistencia;     // ya pasó por la taquilla
   $('r-titulo').textContent = reserva.peliculaTitulo;
-  $('r-cuando').textContent = `${diaCorto(reserva.fecha)} · ${reserva.hora}${t('time_suffix')} · ${reserva.lugar || ''} · ${reserva.codigo}`;
+  $('r-cuando').textContent = `${diaCorto(reserva.fecha)} · ${reserva.hora}${t('time_suffix')} · ${reserva.lugar || ''}`;
   const [clase, clave_txt] = cancelada ? ['error', 'is_cancelled']
     : gestionada ? ['info', 'locked_checked']
     : reserva.estado === 'espera' ? ['info', 'is_waitlist']

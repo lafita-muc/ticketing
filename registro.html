@@ -303,7 +303,7 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
 
 document.getElementById('btn-descargar').addEventListener('click', () => {
   if (!ticketActual) return;
-  LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), `LAFITA-${ticketActual.codigo}.png`);
+  LafitaTicket.descargarPNG(LafitaTicket.svgTicket(ticketActual), 'LAFITA-ticket.png');
 });
 
 document.getElementById('btn-copiar').addEventListener('click', async (e) => {

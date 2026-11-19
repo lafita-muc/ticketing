@@ -35,7 +35,7 @@ const TXT = {
     hola: "Hallo {nombre},",
     ok: "deine Reservierung ist gespeichert.",
     espera: "die Vorstellung ist gerade voll – du stehst auf der <b>Warteliste</b>. Wenn Plätze frei werden, bestätigen wir deine Reservierung. Komm trotzdem zur Kasse: 15 Minuten vor Beginn werden nicht abgeholte Tickets vergeben.",
-    pelicula: "Film", cuando: "Wann", donde: "Wo", personas: "Personen", codigo: "Einlass-Code",
+    pelicula: "Film", cuando: "Wann", donde: "Wo", personas: "Personen", codigo: "Dein Ticket",
     pago: "<b>Das ist eine Reservierung, keine Zahlung.</b> Bezahlt wird an der Kasse, nur in bar. <b>Wir halten deinen Platz nur bis 15 Minuten vor Beginn</b> – danach geht er an andere.",
     gestion: "Ticket ansehen, Daten ändern oder stornieren",
     clave: "Deine Verwaltungsnummer (nicht weitergeben):",
@@ -49,7 +49,7 @@ const TXT = {
     hola: "Hola, {nombre}:",
     ok: "tu reserva está guardada.",
     espera: "la función está completa ahora mismo y estás en la <b>lista de espera</b>. Si se liberan plazas, confirmamos tu reserva. Ven igualmente a la taquilla: 15 minutos antes se dan las entradas no recogidas.",
-    pelicula: "Película", cuando: "Cuándo", donde: "Dónde", personas: "Personas", codigo: "Código de entrada",
+    pelicula: "Película", cuando: "Cuándo", donde: "Dónde", personas: "Personas", codigo: "Tu ticket",
     pago: "<b>Esto es una reserva, no un pago.</b> Se paga en la taquilla, solo en efectivo. <b>Solo guardamos tu sitio hasta 15 minutos antes</b> de la función; después pasa a otra persona.",
     gestion: "Ver tu entrada, cambiar los datos o cancelar",
     clave: "Tu clave de gestión (no la compartas):",
@@ -63,7 +63,7 @@ const TXT = {
     hola: "Hi {nombre},",
     ok: "your reservation is saved.",
     espera: "the screening is full right now, so you're on the <b>waitlist</b>. If seats free up, we'll confirm your reservation. Come to the box office anyway: 15 minutes before the start, uncollected tickets are given out.",
-    pelicula: "Film", cuando: "When", donde: "Where", personas: "People", codigo: "Entry code",
+    pelicula: "Film", cuando: "When", donde: "Where", personas: "People", codigo: "Your ticket",
     pago: "<b>This is a reservation, not a payment.</b> Pay at the box office, cash only. <b>We only hold your seat until 15 minutes before</b> the screening; after that it goes to someone else.",
     gestion: "See your ticket, change your details or cancel",
     clave: "Your management key (don't share it):",
@@ -77,7 +77,7 @@ const TXT = {
     hola: "Olá, {nombre},",
     ok: "sua reserva está guardada.",
     espera: "a sessão está esgotada agora e você está na <b>lista de espera</b>. Se liberarem lugares, confirmamos sua reserva. Venha mesmo assim à bilheteria: 15 minutos antes os ingressos não retirados são liberados.",
-    pelicula: "Filme", cuando: "Quando", donde: "Onde", personas: "Pessoas", codigo: "Código de entrada",
+    pelicula: "Filme", cuando: "Quando", donde: "Onde", personas: "Pessoas", codigo: "Seu ingresso",
     pago: "<b>Isto é uma reserva, não um pagamento.</b> Pague na bilheteria, só em dinheiro. <b>Só guardamos o seu lugar até 15 minutos antes</b> da sessão; depois ele passa para outra pessoa.",
     gestion: "Ver seu ingresso, alterar os dados ou cancelar",
     clave: "Sua chave de gestão (não a compartilhe):",
@@ -142,7 +142,7 @@ function correo(r, env) {
     ${fila(L.cuando, esc(cuando))}
     ${fila(L.donde, esc(r.lugar))}
     ${fila(L.personas, esc(r.personas))}
-    ${espera ? "" : fila(L.codigo, `${esc(r.codigo)} · ${esc(r.nombreArte)}`)}
+    ${espera ? "" : fila(L.codigo, esc(r.nombreArte))}
   </table>
   <p style="background:#eaf4ee;border-left:4px solid #6bb288;padding:10px 14px">${L.pago}</p>
   <p><a href="${enlace}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 18px;font-weight:bold">${L.gestion}</a></p>
@@ -154,7 +154,7 @@ function correo(r, env) {
   const texto = [
     rellenar(L.hola, { nombre: r.nombre }), quitar(espera ? L.espera : L.ok), "",
     `${L.pelicula}: ${r.peliculaTitulo}`, `${L.cuando}: ${cuando}`, `${L.donde}: ${r.lugar}`, `${L.personas}: ${r.personas}`,
-    espera ? null : `${L.codigo}: ${r.codigo} · ${r.nombreArte}`, "",
+    espera ? null : `${L.codigo}: ${r.nombreArte}`, "",
     quitar(L.pago), "", `${L.gestion}: ${enlace}`, `${L.clave} ${clave}`, "", rellenar(L.ayuda, { mail }),
   ].filter((l) => l !== null).join("\n");
 

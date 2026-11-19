@@ -16,7 +16,7 @@ Disponible en **alemán, español, inglés y portugués**.
 - **Ayuda técnica:** en la portada, el formulario y la página de gestión sale el correo **ticket@lafita.de** (se cambia en `CONTACTO`, en `i18n.js`).
 - **Gasteig HP8:** estas funciones no usan el formulario; el botón **München Ticket ↗** lleva a la venta de München Ticket.
 - **Invitados en Gasteig HP8 (link escondido):** `invitados.html` no tiene ningún enlace en la web pública; el equipo comparte el link (sale arriba en el panel). Arriba avisa de que es **solo para invitados** y que las entradas normales están en **München Ticket**. Para reservar hace falta el **código de invitado** (solo el código, sin correo). El código **no está en GitHub**: está en Firebase → Firestore → colección `config`, documento `invitados`, campo `codigo` (texto). Para cambiarlo, se cambia ahí; si cambias la contraseña de admin y quieres que sigan siendo iguales, cámbialo también ahí. Máximo **10 sitios por función**, salvo *El sonido de antes* (**17**) y *Si vas para Chile* (**20**) con `"cupoInvitados"` en `movies.json` (`CUPO_INVITADOS` en `plazas.js` y `CAP()`/`soloInvitados()` en `firestore.rules`). Las reservas salen en el panel ya marcadas **★ Invitado** y con su ocupación de 10 casillas. No se manda correo de confirmación (el correo habla de pagar en efectivo).
-- **Ticket con código y arte:** código de entrada (ej. `LAF-7K3QM`), un nombre fácil de decir ("Jaguar Turquesa") y una imagen única generada a partir del código.
+- **Ticket con arte:** un nombre fácil de decir ("Jaguar Turquesa") y una imagen única. Por dentro cada reserva sigue teniendo un código interno (ej. `LAF-7K3QM`) del que sale la imagen; se guarda en Firebase y se ve en el panel, pero ya **no se enseña** al público (ni en el ticket, ni en gestionar, ni en el correo) para no confundirlo con la clave de gestión.
 - **Cambiar o cancelar:** cada reserva tiene una **clave de gestión** privada (`XXXX-XXXX-XXXX`) para corregir los datos o cancelar. Una vez que la taquilla la marca (vino / no vino), ya no se puede cambiar.
 - **Panel del equipo** (`admin.html`, con usuario y contraseña):
   - **ocupación de cada función**: 35 casillas con reservado / vino / libre, y cuántas personas hay en espera; tocando una función se filtra la lista;
@@ -26,7 +26,7 @@ Disponible en **alemán, español, inglés y portugués**.
 
 ## En la taquilla
 
-1. La persona enseña su ticket. Buscar su código o su animal en el panel.
+1. La persona enseña su ticket. Buscar su animal o su nombre en el panel (en reservas antiguas también vale el código).
 2. Comprobar que la imagen coincide y marcar **✓ Vino** (y cobrar en efectivo).
 3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
 
@@ -91,7 +91,7 @@ La IA solo usa la información de `movies.json` (no inventa datos) y siempre dev
 
 ## Correo de confirmación
 
-Al reservar, la persona recibe un correo en su idioma (DE · ES · EN · PT) con la película, día, hora, sala, número de personas, código de entrada y animal, el aviso de pago en efectivo / 15 minutos, y un botón para ver su ticket, cambiar o cancelar (con su clave de gestión). Si quedó en lista de espera, el correo lo dice. Las respuestas llegan a `ticket@lafita.de`.
+Al reservar, la persona recibe un correo en su idioma (DE · ES · EN · PT) con la película, día, hora, sala, número de personas, su animal, el aviso de pago en efectivo / 15 minutos, y un botón para ver su ticket, cambiar o cancelar (con su clave de gestión). Si quedó en lista de espera, el correo lo dice. Las respuestas llegan a `ticket@lafita.de`.
 
 Funciona con un pequeño servicio gratuito de Cloudflare (`correo/`) y **Brevo** para enviar (gratis hasta 300 correos al día). El servicio solo acepta la clave de una reserva recién hecha (menos de 15 min), la lee en Firebase y escribe a la dirección guardada ahí: nadie puede usarlo para mandar otros correos. Si el servicio falla, la reserva se guarda igual.
 
