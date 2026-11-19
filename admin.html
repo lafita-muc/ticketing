@@ -60,6 +60,10 @@
     <div class="admin-toolbar">
       <input type="search" id="buscar" data-i18n-ph="search_ph" aria-label="Search">
       <select id="filtro-pelicula" aria-label="Film"></select>
+      <select id="orden" aria-label="Sort">
+        <option value="reciente" data-i18n="sort_recent"></option>
+        <option value="nombre" data-i18n="sort_name"></option>
+      </select>
       <button class="btn secondary" id="btn-csv" data-i18n="btn_csv"></button>
     </div>
 
@@ -259,8 +263,12 @@ function filtradas() {
   const filtro = $('filtro-pelicula').value;
   const soloInvitados = filtro === '__invitados', pid = soloInvitados ? '' : filtro;
   const q = normalizar($('buscar').value);
-  return todas.filter(r => (!pid || r.peliculaId === pid) && (!soloInvitados || r.invitado) &&
+  const lista = todas.filter(r => (!pid || r.peliculaId === pid) && (!soloInvitados || r.invitado) &&
     (!q || normalizar([r.codigo, r.nombre, r.email, r.nombreArte, r.invitado ? t('guest_badge') : ''].join(' ')).includes(q)));
+  // Orden: por defecto las más recientes primero (como llegan de Firebase); o por nombre A–Z
+  if ($('orden').value === 'nombre')
+    lista.sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), undefined, { sensitivity: 'base' }));
+  return lista;
 }
 
 function estadoHtml(r) {
@@ -321,6 +329,7 @@ function render() {
 }
 
 $('filtro-pelicula').addEventListener('change', render);
+$('orden').addEventListener('change', render);
 $('buscar').addEventListener('input', render);
 
 // ---------- CSV ----------
