@@ -11,7 +11,7 @@ Disponible en **alemán, español, inglés y portugués**.
   - **Con IA (opcional):** si se configura el servicio de `ia/` (ver abajo), entiende cualquier frase y escribe razones a medida. Si el servicio no responde, la web usa sola el recomendador sin IA.
 - **Programa por días** con todas las funciones. El número de plazas libres **solo se muestra cuando quedan 10 o menos** («¡Solo quedan X plazas! Reserva ahora»); se cambia en `AVISO_PLAZAS`, en `plazas.js`.
 - **Werkstattkino** (35 plazas por función): el público reserva con un formulario corto (nombre, correo y número de personas, todo obligatorio). Es una **reserva, no un pago**: se paga en la taquilla, **solo en efectivo**, y la reserva se guarda **solo hasta 15 minutos antes** de la función.
-- **Agotado / lista de espera:** cuando una función está completa se muestra **Agotado** y se avisa de que pueden venir igualmente a la taquilla, porque puede haber sitios extra. También pueden apuntarse a la **lista de espera**; si se liberan plazas, el equipo la confirma.
+- **Reservas completas (sin lista de espera):** cuando se llega al número de reservas, la función sale como **Reservas online completas** (no "agotado"), desaparece el botón y el formulario, y se dice que aún pueden venir a la taquilla a buscar entradas porque lo más probable es que haya. Si alguien intenta reservar más plazas de las que quedan, no se guarda y se le dice cuántas quedan. Si luego se liberan plazas (cancelación, "No vino", "Liberar resto"), se puede volver a reservar. Las reservas antiguas que quedaron "en espera" siguen saliendo en el panel con **Confirmar** / **Cancelar**.
 - **Apertura (Kulturzentrum Luise, 25.11.):** aforo de **190**, pero solo se dan **170 reservas** online (`"capacidad": 170, "aforo": 190` en `movies.json` y `CAP()` en `firestore.rules`). La web no da estas cifras: solo avisa de que hay más plazas en la taquilla el mismo día.
 - **Ayuda técnica:** en la portada, el formulario y la página de gestión sale el correo **ticket@lafita.de** (se cambia en `CONTACTO`, en `i18n.js`).
 - **Gasteig HP8:** estas funciones no usan el formulario; el botón **München Ticket ↗** lleva a la venta de München Ticket.
@@ -29,7 +29,7 @@ Disponible en **alemán, español, inglés y portugués**.
 1. La persona enseña su ticket. Buscar su animal o su nombre en el panel (en reservas antiguas también vale el código).
 2. Comprobar que la imagen coincide y marcar **✓ Vino** (y cobrar en efectivo).
    Si de una reserva de 4 llegan solo 2, pulsar **+1 llegó** por cada una; las 4 plazas siguen guardadas mientras tanto.
-3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó y **Liberar resto** en las reservas a medias. Esas plazas quedan libres en la ocupación y se pueden dar a gente en espera o a quien venga sin reserva (**Confirmar** a los de la lista de espera).
+3. **15 minutos antes** de empezar: marcar **✗ No vino** a quien no llegó y **Liberar resto** en las reservas a medias. Esas plazas quedan libres en la ocupación y en la web, y se pueden dar a quien venga sin reserva.
 
 ## Actualizar la web
 

@@ -103,7 +103,9 @@ function botonTicket(p) {
   if (p.soloTaquilla) return `<span class="boxoffice-only">${t('btn_boxoffice')}</span>`;
   return p.enlaceExterno
     ? `<a class="btn secondary" href="${esc(p.enlaceExterno)}" target="_blank" rel="noopener">${t('btn_tickets')}</a>`
-    : `<a class="btn${libresDe(p) <= 0 ? ' waitlist' : ''}" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${libresDe(p) <= 0 ? t('btn_waitlist') : t('btn_reserve')}</a>`;
+    : libresDe(p) <= 0
+      ? `<span class="boxoffice-only">${t('btn_full_boxoffice')}</span>`   // sin reservas online: entradas en taquilla
+      : `<a class="btn" href="registro.html?pelicula=${encodeURIComponent(p.id)}&lang=${LANG}">${t('btn_reserve')}</a>`;
 }
 
 // ---------- Recomendador ----------
