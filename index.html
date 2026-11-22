@@ -87,8 +87,10 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function libresDe(p) { return capacidadDe(p) - (ocupadas[p.id] || 0); }
+function libresDe(p) { return cerrada(p) ? 0 : capacidadDe(p) - (ocupadas[p.id] || 0); }
 function lineaPlazas(p) {
+  // Reservas cerradas (apertura): se llegó al máximo, solo taquilla
+  if (cerrada(p)) return `<p class="seats-line full">${t('closed_line')}</p><p class="seats-extra">${t('closed_hint')}</p>`;
   const n = libresDe(p);
   const txt = textoPlazas(n);
   let h = txt ? `<p class="seats-line${n <= 0 ? ' full' : n <= 5 ? ' low' : ''}">${txt}</p>` : '';
@@ -156,6 +158,7 @@ function infoPractica(p) {
   const n = libresDe(p);
   if (p.enlaceExterno) return t('r_online');
   if (p.soloTaquilla) return t('r_boxoffice');
+  if (cerrada(p)) return t('r_closed');
   if (n <= 0) return t('r_full');
   if (!mostrarPlazas(n)) return t('r_open');
   return n === 1 ? t('r_seats_one') : t('r_seats', { n });

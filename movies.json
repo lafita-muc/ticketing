@@ -9,6 +9,7 @@
     "lugar": "Kulturzentrum LUISE",
     "capacidad": 170,
     "aforo": 190,
+    "reservasCerradas": true,
     "maxEntradasPorPersona": 4,
     "direccion": "Daniel Hendler",
     "reparto": [

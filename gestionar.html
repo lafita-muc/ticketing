@@ -122,7 +122,7 @@ async function guardar(cambios) {
     const delta = aporta(despues) - aporta(antes);
     if (delta !== 0) {
       const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
-      if (ocup + delta > cap) throw new Error('NO_SEATS');
+      if (ocup + delta > cap || (delta > 0 && cerrada(peliculaDe(reserva)))) throw new Error('NO_SEATS');
       tx.set(refFuncion, { ocupadas: ocup + delta, ultima: clave });
     }
     tx.update(refReserva, Object.assign({}, cambios, { modificadoEn: firebase.firestore.FieldValue.serverTimestamp() }));
