@@ -4,7 +4,8 @@
 // - El público puede reservar mientras queden plazas (si no, queda en lista de espera).
 // - Cada persona puede cambiar o cancelar SU reserva con su clave de gestión.
 // - El equipo (con login) puede verlo todo y marcar asistencia, cancelar,
-//   confirmar desde la lista de espera, marcar invitados y borrar.
+//   confirmar desde la lista de espera, marcar invitados, añadir invitados
+//   (aunque las reservas estén cerradas o completas) y borrar.
 // - El campo "invitado" solo lo pone el equipo y la web pública no lo muestra.
 // - Funciones de München Ticket (Gasteig HP8): el público no reserva aquí,
 //   solo invitados desde invitados.html con el código de invitado, máx. 10.
@@ -75,6 +76,16 @@ service cloud.firestore {
                + aporta(despues) - aporta(antes);
       }
 
+      // Invitado añadido por el equipo desde el panel (admin.html → Añadir invitado):
+      // vale aunque las reservas estén cerradas o completas; siempre "activa" y ★ Invitado
+      allow create: if esEquipo()
+        && clave.size() == 12
+        && valida(request.resource.data)
+        && request.resource.data.estado == 'activa'
+        && request.resource.data.get('invitado', false) == true
+        && !('asistencia' in request.resource.data)
+        && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data);
+
       // Reservar (público): "activa" si hay plazas (sube el contador), o "espera"
       allow create: if clave.size() == 12
         && valida(request.resource.data)
@@ -136,7 +147,10 @@ service cloud.firestore {
       allow create, update: if request.resource.data.keys().hasOnly(['ocupadas', 'ultima'])
         && request.resource.data.ocupadas is int
         && request.resource.data.ocupadas >= 0
-        && request.resource.data.ocupadas <= CAP(pid)
+        // No se pasa del cupo; bajar siempre se puede (p. ej. cancelar cuando
+        // el equipo añadió invitados por encima del cupo)
+        && (request.resource.data.ocupadas <= CAP(pid)
+            || (resource != null && request.resource.data.ocupadas <= resource.data.ocupadas))
         && request.resource.data.ultima is string
         && existsAfter(ins(request.resource.data.ultima))
         && getAfter(ins(request.resource.data.ultima)).data.peliculaId == pid
