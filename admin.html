@@ -75,7 +75,7 @@
         <div class="ticket-actions">
           <button type="button" class="btn secondary small" id="ag-copiar" data-i18n="btn_copy"></button>
           <button type="button" class="btn secondary small" id="ag-descargar" data-i18n="btn_download"></button>
-          <button type="button" class="link-btn" id="ag-cerrar" data-i18n="btn_close"></button>
+          <button type="button" class="link-btn" id="ag-cerrar" data-i18n="ag_another"></button>
         </div>
       </div>
     </details>
@@ -267,61 +267,68 @@ function agAviso(tipo, texto) {
   $('ag-msg').firstChild.textContent = texto;
 }
 
+let agEnviando = false;
 $('form-add-guest').addEventListener('submit', async e => {
   e.preventDefault();
+  if (agEnviando) return;
   $('ag-msg').innerHTML = '';
   const p = agActual();
   const nombre = $('ag-nombre').value.trim();
   const email = $('ag-email').value.trim();
   const personas = parseInt($('ag-personas').value, 10) || 1;
-  if (!p) return $('ag-pelicula').focus();
-  if (nombre.length < 2) return $('ag-nombre').focus();
-  if (!/.+@.+\..+/.test(email)) return $('ag-email').focus();
+  if (!p) { agAviso('error', t('ag_err_film')); return $('ag-pelicula').focus(); }
+  if (nombre.length < 2) { agAviso('error', t('ag_err_name')); return $('ag-nombre').focus(); }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { agAviso('error', t('ag_err_email')); return $('ag-email').focus(); }
 
   const total = ocupadasDe(p.id) + personas, aforo = topeEquipo(p);
   if (total > aforo && !confirm(t('add_guest_over', { total, aforo }))) return;
 
   const btn = $('ag-enviar');
+  agEnviando = true;
   btn.disabled = true;
   btn.textContent = t('sending');
   try {
     const codigo = LafitaTicket.generarCodigo();
     const clave = LafitaTicket.generarClave();
-    const refReserva = db.collection('inscripciones').doc(clave);
-    const refFuncion = db.collection('funciones').doc(p.id);
-    await db.runTransaction(async tx => {
-      const f = await tx.get(refFuncion);
-      const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
-      tx.set(refReserva, {
-        codigo,
-        nombreArte: LafitaTicket.nombreArte(codigo),
-        peliculaId: p.id,
-        peliculaTitulo: p.titulo,
-        fecha: p.fecha,
-        hora: p.hora,
-        lugar: p.lugar,
-        nombre, email, personas,
-        estado: 'activa',
-        invitado: true,
-        gestionadoPor: usuarioActual,
-        idioma: LANG,
-        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      tx.set(refFuncion, { ocupadas: ocup + personas });
+    // Reserva + contador juntos; el contador sube con increment (sin transacción)
+    const batch = db.batch();
+    batch.set(db.collection('inscripciones').doc(clave), {
+      codigo,
+      nombreArte: LafitaTicket.nombreArte(codigo),
+      peliculaId: p.id,
+      peliculaTitulo: p.titulo,
+      fecha: p.fecha,
+      hora: p.hora,
+      lugar: p.lugar,
+      nombre, email, personas,
+      estado: 'activa',
+      invitado: true,
+      gestionadoPor: usuarioActual,
+      idioma: LANG,
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     });
+    batch.set(db.collection('funciones').doc(p.id),
+      { ocupadas: firebase.firestore.FieldValue.increment(personas) }, { merge: true });
+    await batch.commit();
+
     agTicket = { codigo, clave, nombre, personas, titulo: p.titulo, fecha: p.fecha, hora: p.hora, lugar: p.lugar, estado: 'activa' };
     $('ag-ticket-svg').innerHTML = LafitaTicket.svgTicket(agTicket);
     $('ag-link').textContent = new URL('gestionar.html?clave=' + clave, location.href).href;
     $('ag-ticket').classList.remove('hidden');
     agAviso('success', t('add_guest_ok', { nombre, n: personas, titulo: p.titulo }));
     $('ag-nombre').value = ''; $('ag-email').value = ''; $('ag-personas').value = '1';
+    $('ag-msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch (err) {
     agAviso('error', t('err_generic', { msg: err.message }));
   } finally {
+    agEnviando = false;
     btn.disabled = false;
     btn.textContent = t('add_guest_btn');
   }
 });
+['ag-nombre', 'ag-email', 'ag-pelicula'].forEach(id => $(id).addEventListener('input', () => {
+  if ($('ag-msg').querySelector('.error')) $('ag-msg').innerHTML = '';
+}));
 
 $('ag-copiar').addEventListener('click', async e => {
   const texto = $('ag-link').textContent;
@@ -336,6 +343,7 @@ $('ag-cerrar').addEventListener('click', () => {
   agTicket = null;
   $('ag-ticket').classList.add('hidden');
   $('ag-msg').innerHTML = '';
+  $('ag-nombre').focus();
 });
 
 function mostrarAviso(tipo, texto) {
@@ -381,14 +389,16 @@ function renderAsientos() {
     const cap = capacidadDe(p), ocup = ocupadasDe(p.id), vino = Math.min(vinieronDe(p.id), ocup), espera = esperaDe(p.id);
     // Más allá del cupo de reservas: invitados añadidos por el equipo (hasta el aforo); en rojo solo si pasa del aforo
     const tope = topeEquipo(p);
-    const asientos = Array.from({ length: Math.max(cap, ocup) }, (_, i) =>
+    const invit = reservasDe(p.id).filter(r => r.invitado).reduce((s, r) => s + aporta(r), 0);
+    const conAforo = tope > cap;
+    const asientos = Array.from({ length: Math.max(tope, ocup) }, (_, i) =>
       `<i class="seat${i < vino ? ' came' : i < ocup ? ' taken' : ''}${i >= tope ? ' over' : i >= cap ? ' extra' : ''}"></i>`).join('');
-    return `<button type="button" class="seat-card${filtro === p.id ? ' active' : ''}${ocup >= cap ? ' full' : ''}" data-pid="${escapeHtml(p.id)}">
+    return `<button type="button" class="seat-card${filtro === p.id ? ' active' : ''}${ocup >= tope ? ' full' : ''}" data-pid="${escapeHtml(p.id)}">
       <span class="seat-when">${escapeHtml(diaCorto(p.fecha))} · ${escapeHtml(p.hora)} · ${escapeHtml(p.lugar)}</span>
       <span class="seat-film">${escapeHtml(p.titulo)}</span>
       ${p.enlaceExterno ? `<span class="seat-guest-tag">${t('seat_guests_only')}</span>` : ''}
       <span class="seats">${asientos}</span>
-      <span class="seat-count"><strong>${t('seats_count', { n: ocup, cap })}</strong>${espera ? ` · ${t('waitlist_count', { n: espera })}` : ''}</span>
+      <span class="seat-count"><strong>${conAforo ? t('seats_count_aforo', { n: ocup, aforo: tope }) : t('seats_count', { n: ocup, cap })}</strong>${espera ? ` · ${t('waitlist_count', { n: espera })}` : ''}${(conAforo || invit) ? `<br><span class="sub">${t('seats_breakdown', { online: ocup - invit, cap, g: invit })}</span>` : ''}</span>
     </button>`;
   }).join('');
 }
