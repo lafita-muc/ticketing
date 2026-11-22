@@ -27,6 +27,10 @@ const CAPACIDAD_POR_DEFECTO = 35;
 // 10 sitios. Si lo cambias, cambia también CAP() en firestore.rules.
 const CUPO_INVITADOS = 10;
 
+// Reservas cerradas a mano ("reservasCerradas": true en movies.json): ya no se
+// puede reservar aunque se liberen plazas. Solo taquilla el mismo día.
+function cerrada(pelicula) { return !!(pelicula && pelicula.reservasCerradas); }
+
 function capacidadDe(pelicula) {
   if (pelicula && pelicula.enlaceExterno) return pelicula.cupoInvitados || CUPO_INVITADOS;
   return (pelicula && pelicula.capacidad) || CAPACIDAD_POR_DEFECTO;

@@ -390,6 +390,7 @@ function evaluar(p, c, libres) {
   let extra;
   if (p.enlaceExterno) extra = t('r_online');
   else if (p.soloTaquilla) extra = t('r_boxoffice');
+  else if (cerrada(p)) extra = t('r_closed');
   else if (libres <= 0) extra = t('r_full');
   else if (!mostrarPlazas(libres)) extra = t('r_open');
   else extra = libres === 1 ? t('r_seats_one') : t('r_seats', { n: libres });

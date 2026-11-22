@@ -34,7 +34,7 @@
         <span id="info-hora"></span><br>
         <strong id="info-lugar"></strong>
         <div class="green-bar"></div>
-        <span class="small" data-i18n="form_note"></span>
+        <span class="small" id="form-note" data-i18n="form_note"></span>
       </aside>
 
       <div class="form-card">
@@ -117,8 +117,8 @@ let pelicula = null;
 let ticketActual = null;
 let ocupadas = 0;        // plazas ocupadas en esta función (se actualiza en directo)
 
-function libres() { return pelicula ? capacidadDe(pelicula) - ocupadas : 0; }
-function textoBoton() { return libres() <= 0 ? t('btn_waitlist') : t('btn_send'); }
+function libres() { return pelicula && !cerrada(pelicula) ? capacidadDe(pelicula) - ocupadas : 0; }
+function textoBoton() { return t('btn_send'); }
 
 // Aviso de plazas encima del formulario
 function pintarPlazas() {
@@ -126,12 +126,17 @@ function pintarPlazas() {
   const nota = document.getElementById('plazas-note');
   const n = libres();
   const partes = [];
-  if (n <= 0) partes.push(t('form_full_note'));
+  if (cerrada(pelicula)) partes.push(t('form_closed_note'));
+  else if (n <= 0) partes.push(t('form_full_note'));
   else if (mostrarPlazas(n)) partes.push(t('form_seats_note', { n }));
-  if (pelicula.aforo > capacidadDe(pelicula)) partes.push(t('opening_extra'));
+  if (!cerrada(pelicula) && pelicula.aforo > capacidadDe(pelicula)) partes.push(t('opening_extra'));
   nota.hidden = partes.length === 0;
   nota.classList.toggle('full', n <= 0);
   nota.innerHTML = partes.join('<br>');
+  // Sin lista de espera: si no quedan plazas, el formulario desaparece
+  document.getElementById('form-registro').hidden = n <= 0;
+  // Sin formulario, el aviso de pago/15 minutos sobra
+  document.getElementById('form-note').hidden = n <= 0;
   const btn = document.getElementById('btn-enviar');
   if (btn.textContent !== t('sending')) btn.textContent = textoBoton();
 }
@@ -251,7 +256,9 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
     const estado = await db.runTransaction(async tx => {
       const f = await tx.get(refFuncion);
       const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
-      const estado = ocup + personas <= capacidadDe(pelicula) ? 'activa' : 'espera';
+      // Sin lista de espera: si no caben, no se guarda nada
+      if (ocup + personas > capacidadDe(pelicula)) throw new Error('NO_SEATS');
+      const estado = 'activa';
       tx.set(refReserva, {
         codigo,
         nombreArte,
@@ -294,7 +301,9 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
     }
   } catch (err) {
     errorBox.innerHTML = `<div class="alert error"></div>`;
-    errorBox.firstChild.textContent = t('err_send', { msg: err.message });
+    errorBox.firstChild.textContent = err.message === 'NO_SEATS'
+      ? t('err_full_now', { n: Math.max(libres(), 0) })
+      : t('err_send', { msg: err.message });
   } finally {
     btn.textContent = textoBoton();
     validacion.refrescar();

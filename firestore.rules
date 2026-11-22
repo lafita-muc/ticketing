@@ -51,6 +51,10 @@ service cloud.firestore {
     // Deben coincidir con "soloTaquilla": true en movies.json. Ahora no hay ninguna.
     function soloTaquilla(p) { return p in []; }
 
+    // Reservas cerradas a mano ("reservasCerradas": true en movies.json):
+    // ya no se aceptan reservas nuevas. La apertura llegó al máximo.
+    function cerrada(p) { return p in ['un-cabo-suelto-1125']; }
+
     match /inscripciones/{clave} {
 
       // Datos obligatorios y con formato correcto
@@ -75,6 +79,7 @@ service cloud.firestore {
       allow create: if clave.size() == 12
         && valida(request.resource.data)
         && !soloTaquilla(request.resource.data.peliculaId)
+        && !cerrada(request.resource.data.peliculaId)
         && !('asistencia' in request.resource.data)
         && request.resource.data.estado in ['activa', 'espera']
         && contadorOk({ 'estado': 'cancelada', 'personas': 0 }, request.resource.data)
