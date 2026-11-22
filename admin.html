@@ -45,6 +45,41 @@
     <!-- Link escondido para invitados en las funciones de München Ticket -->
     <p class="guest-link-box"><span data-i18n="admin_guest_link"></span><br><code id="link-invitados"></code></p>
 
+    <!-- Añadir invitado a mano (también con reservas cerradas o completas) -->
+    <details class="add-guest" id="add-guest">
+      <summary data-i18n="add_guest_title"></summary>
+      <p class="form-hint" data-i18n="add_guest_hint"></p>
+      <form id="form-add-guest" novalidate>
+        <label for="ag-pelicula"><span data-i18n="inv_lbl_film"></span> *</label>
+        <select id="ag-pelicula" required></select>
+        <div id="ag-estado" class="seats-note" hidden></div>
+
+        <label for="ag-nombre"><span data-i18n="lbl_name"></span> *</label>
+        <input type="text" id="ag-nombre" required minlength="2" maxlength="120">
+
+        <label for="ag-email"><span data-i18n="lbl_email"></span> *</label>
+        <input type="email" id="ag-email" required maxlength="160">
+        <p class="form-hint" data-i18n="add_guest_email_hint"></p>
+
+        <label for="ag-personas"><span data-i18n="lbl_people"></span> *</label>
+        <select id="ag-personas" required></select>
+
+        <div class="form-actions">
+          <button type="submit" class="btn" id="ag-enviar" data-i18n="add_guest_btn"></button>
+        </div>
+      </form>
+      <div id="ag-msg"></div>
+      <div id="ag-ticket" class="hidden">
+        <div id="ag-ticket-svg" class="ticket-svg"></div>
+        <p class="guest-link-box"><span data-i18n="add_guest_link"></span><br><code id="ag-link"></code></p>
+        <div class="ticket-actions">
+          <button type="button" class="btn secondary small" id="ag-copiar" data-i18n="btn_copy"></button>
+          <button type="button" class="btn secondary small" id="ag-descargar" data-i18n="btn_download"></button>
+          <button type="button" class="link-btn" id="ag-cerrar" data-i18n="btn_close"></button>
+        </div>
+      </div>
+    </details>
+
     <!-- Ocupación de cada función -->
     <section class="seat-section">
       <h3 class="section-title" data-i18n="seats_title"></h3>
@@ -185,7 +220,7 @@ async function aplicar(r, cambios, borrar) {
   const lista = todas.filter(x => x.id !== r.id).concat(nueva ? [nueva] : []);
   const ocup = ocupadasDe(r.peliculaId, lista);
   const p = peliculas.find(x => x.id === r.peliculaId);
-  if (nueva && aporta(nueva) > aporta(r) && ocup > capacidadDe(p)) {
+  if (nueva && aporta(nueva) > aporta(r) && ocup > topeEquipo(p)) {
     mostrarAviso('error', t('err_full_promote'));
     return;
   }
@@ -200,6 +235,108 @@ async function aplicar(r, cambios, borrar) {
   try { await batch.commit(); }
   catch (e) { mostrarAviso('error', t('err_generic', { msg: e.message })); }
 }
+
+// El equipo puede pasar del cupo de reservas (invitados) hasta el aforo de la sala
+function topeEquipo(p) { return Math.max((p && p.aforo) || 0, capacidadDe(p)); }
+
+// ---------- Añadir invitado ----------
+// Se guarda como una reserva normal "activa", ya marcada ★ Invitado, aunque la
+// función tenga las reservas cerradas o completas. No se manda correo.
+let agTicket = null;
+function agActual() { return peliculas.find(p => p.id === $('ag-pelicula').value); }
+
+function pintarAddGuest() {
+  const sel = $('ag-pelicula'), previo = sel.value;
+  sel.innerHTML = `<option value="">${t('opt_choose')}</option>` + peliculas.map(p =>
+    `<option value="${escapeHtml(p.id)}">${escapeHtml(diaCorto(p.fecha))} ${escapeHtml(p.hora)} · ${escapeHtml(p.titulo)}</option>`).join('');
+  if (peliculas.some(p => p.id === previo)) sel.value = previo;
+  const pers = $('ag-personas'), pPrev = pers.value || '1';
+  pers.innerHTML = Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  pers.value = pPrev;
+  const p = agActual(), nota = $('ag-estado');
+  if (!p) { nota.hidden = true; return; }
+  const ocup = ocupadasDe(p.id), aforo = topeEquipo(p);
+  nota.hidden = false;
+  nota.classList.toggle('full', ocup >= aforo);
+  nota.textContent = t('add_guest_status', { ocup, aforo, n: Math.max(aforo - ocup, 0) });
+}
+$('ag-pelicula').addEventListener('change', pintarAddGuest);
+
+function agAviso(tipo, texto) {
+  $('ag-msg').innerHTML = `<div class="alert ${tipo}"></div>`;
+  $('ag-msg').firstChild.textContent = texto;
+}
+
+$('form-add-guest').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('ag-msg').innerHTML = '';
+  const p = agActual();
+  const nombre = $('ag-nombre').value.trim();
+  const email = $('ag-email').value.trim();
+  const personas = parseInt($('ag-personas').value, 10) || 1;
+  if (!p) return $('ag-pelicula').focus();
+  if (nombre.length < 2) return $('ag-nombre').focus();
+  if (!/.+@.+\..+/.test(email)) return $('ag-email').focus();
+
+  const total = ocupadasDe(p.id) + personas, aforo = topeEquipo(p);
+  if (total > aforo && !confirm(t('add_guest_over', { total, aforo }))) return;
+
+  const btn = $('ag-enviar');
+  btn.disabled = true;
+  btn.textContent = t('sending');
+  try {
+    const codigo = LafitaTicket.generarCodigo();
+    const clave = LafitaTicket.generarClave();
+    const refReserva = db.collection('inscripciones').doc(clave);
+    const refFuncion = db.collection('funciones').doc(p.id);
+    await db.runTransaction(async tx => {
+      const f = await tx.get(refFuncion);
+      const ocup = f.exists ? (f.data().ocupadas || 0) : 0;
+      tx.set(refReserva, {
+        codigo,
+        nombreArte: LafitaTicket.nombreArte(codigo),
+        peliculaId: p.id,
+        peliculaTitulo: p.titulo,
+        fecha: p.fecha,
+        hora: p.hora,
+        lugar: p.lugar,
+        nombre, email, personas,
+        estado: 'activa',
+        invitado: true,
+        gestionadoPor: usuarioActual,
+        idioma: LANG,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tx.set(refFuncion, { ocupadas: ocup + personas });
+    });
+    agTicket = { codigo, clave, nombre, personas, titulo: p.titulo, fecha: p.fecha, hora: p.hora, lugar: p.lugar, estado: 'activa' };
+    $('ag-ticket-svg').innerHTML = LafitaTicket.svgTicket(agTicket);
+    $('ag-link').textContent = new URL('gestionar.html?clave=' + clave, location.href).href;
+    $('ag-ticket').classList.remove('hidden');
+    agAviso('success', t('add_guest_ok', { nombre, n: personas, titulo: p.titulo }));
+    $('ag-nombre').value = ''; $('ag-email').value = ''; $('ag-personas').value = '1';
+  } catch (err) {
+    agAviso('error', t('err_generic', { msg: err.message }));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t('add_guest_btn');
+  }
+});
+
+$('ag-copiar').addEventListener('click', async e => {
+  const texto = $('ag-link').textContent;
+  try { await navigator.clipboard.writeText(texto); e.target.textContent = t('copied'); }
+  catch (err) { window.prompt('', texto); }
+  setTimeout(() => { e.target.textContent = t('btn_copy'); }, 2000);
+});
+$('ag-descargar').addEventListener('click', () => {
+  if (agTicket) LafitaTicket.descargarPNG(LafitaTicket.svgTicket(agTicket), `LAFITA-invitado-${agTicket.nombre.replace(/[^\w-]+/g, '_')}.png`);
+});
+$('ag-cerrar').addEventListener('click', () => {
+  agTicket = null;
+  $('ag-ticket').classList.add('hidden');
+  $('ag-msg').innerHTML = '';
+});
 
 function mostrarAviso(tipo, texto) {
   $('accion-msg').innerHTML = `<div class="alert ${tipo}"></div>`;
@@ -242,8 +379,10 @@ function renderAsientos() {
   const filtro = $('filtro-pelicula').value;
   $('seat-grid').innerHTML = peliculas.map(p => {
     const cap = capacidadDe(p), ocup = ocupadasDe(p.id), vino = Math.min(vinieronDe(p.id), ocup), espera = esperaDe(p.id);
+    // Más allá del cupo de reservas: invitados añadidos por el equipo (hasta el aforo); en rojo solo si pasa del aforo
+    const tope = topeEquipo(p);
     const asientos = Array.from({ length: Math.max(cap, ocup) }, (_, i) =>
-      `<i class="seat${i < vino ? ' came' : i < ocup ? ' taken' : ''}${i >= cap ? ' over' : ''}"></i>`).join('');
+      `<i class="seat${i < vino ? ' came' : i < ocup ? ' taken' : ''}${i >= tope ? ' over' : i >= cap ? ' extra' : ''}"></i>`).join('');
     return `<button type="button" class="seat-card${filtro === p.id ? ' active' : ''}${ocup >= cap ? ' full' : ''}" data-pid="${escapeHtml(p.id)}">
       <span class="seat-when">${escapeHtml(diaCorto(p.fecha))} · ${escapeHtml(p.hora)} · ${escapeHtml(p.lugar)}</span>
       <span class="seat-film">${escapeHtml(p.titulo)}</span>
@@ -302,6 +441,7 @@ function accionesHtml(r) {
 
 function render() {
   actualizarFiltro();
+  pintarAddGuest();
   renderAsientos();
   const datos = filtradas();
   $('tabla-body').innerHTML = datos.map(r => `
